@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MathLab</title>
+    <meta name="description" content="A virtual math laboratory where students and teachers can explore geometry and mathematical concepts visually and interactively." />
+    <meta property="og:title" content="MathLab" />
+    <meta property="og:description" content="A virtual math laboratory where students and teachers can explore geometry and mathematical concepts visually and interactively." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- Top Navigation Bar -->
+    <header class="navbar" id="appNavbar">
+      <div class="nav-brand" id="navBrand">
+        <a href="#home" class="brand-link" id="brandLink" aria-label="MathLab Home">
+          <div class="nav-logo-icon" id="navLogoIcon" aria-hidden="true">
+            <span>∑</span>
+          </div>
+          <span class="nav-title" id="navAppTitle">MathLab</span>
+        </a>
+      </div>
+      <div class="nav-tagline" id="navTagline">
+        Explore math by playing with it
+      </div>
+    </header>
+
+    <!-- App Container with View Switching -->
+    <main class="app-container" id="mainContainer">
+      <!-- ========================================================= -->
+      <!-- VIEW 1: HOME PAGE (ONLY Navbar, Hero, and 5 Category Cards) -->
+      <!-- ========================================================= -->
+      <section class="view-panel active" id="homeView">
+        <!-- Hero Section -->
+        <div class="hero-section" id="heroSection">
+          <h1 class="hero-title" id="heroHeading">The Virtual Math Laboratory</h1>
+          <p class="hero-description" id="heroDescription">
+            Explore math by playing with it. Choose an interactive laboratory below to experiment with geometric shapes, algebraic curves, trigonometric waves, calculus derivatives, and probability models.
+          </p>
+        </div>
+
+        <!-- 5 Category Cards in a Responsive Grid (2-3 per row) -->
+        <div class="category-grid" id="categoryGrid">
+          <!-- 1. GEOMETRY CARD (Blue Theme) -->
+          <a href="#geometry" class="category-card card-geometry" id="cardGeometry" aria-label="Open Geometry Lab">
+            <div class="card-visual-wrapper" id="cardVisualGeometry">
+              <svg class="card-svg" viewBox="0 0 340 190" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <!-- Drafting table grid background -->
+                <rect width="340" height="190" rx="8" fill="#eff6ff" />
+                <defs>
+                  <pattern id="geoDraftGrid" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <path d="M 16 0 L 0 0 0 16" fill="none" stroke="#dbeafe" stroke-width="0.75" />
+                  </pattern>
+                  <filter id="geoDropShadow" x="-10%" y="-10%" width="120%" height="120%">
+                    <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#1e40af" flood-opacity="0.12" />
+                  </filter>
+                </defs>
+                <rect width="340" height="190" rx="8" fill="url(#geoDraftGrid)" />
+
+                <!-- Ruler on drafting table -->
+                <g transform="translate(18, 142)" filter="url(#geoDropShadow)">
+                  <rect x="0" y="0" width="304" height="26" rx="3" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5" />
+                  <!-- Tick marks on ruler -->
+                  <line x1="10" y1="0" x2="10" y2="12" stroke="#2563eb" stroke-width="1.5" />
+                  <line x1="25" y1="0" x2="25" y2="7" stroke="#60a5fa" stroke-width="1" />
+                  <line x1="40" y1="0" x2="40" y2="10" stroke="#3b82f6" stroke-width="1" />
+                  <line x1="55" y1="0" x2="55" y2="7" stroke="#60a5fa" stroke-width="1" />
+                  <line x1="70" y1="0" x2="70" y2="12" stroke="#2563eb" stroke-width="1.5" />
+                  <line x1="85" y1="0" x2="85" y2="7" stroke="#60a5fa" stroke-width="1" />
+                  <line x1="100" y1="0" x2="100" y2="10" stroke="#3b82f6" stroke-width="1" />
+                  <line x1="115" y1="0" x2="115" y2="7" stroke="#60a5fa" stroke-width="1" />
+                  <line x1="130" y1="0" x2="130" y2="12" stroke="#2563eb" stroke-width="1.5" />
+                  <line x1="145" y1="0" x2="145" y2="7" stroke="#60a5fa" stroke-width="1" />
+                  <line x1="160" y1="0" x2="160" y2="10" stroke="#3b82f6" stroke-width="1" />
+                  <line x1="175" y1="0" x2="175" y2="7" stroke="#60a5fa" stroke-width="1" />
+                  <line x1="190" y1="0" x2="190" y2="12" stroke="#2563eb" stroke-width="1.5" />
+                  <line x1="205" y1="0" x2="205" y2="7" stroke="#60a5fa" stroke-width="1" />
+                  <line x1="220" y1="0" x2="220" y2="10" stroke="#3b82f6" stroke-width="1" />
+                  <line x1="235" y1="0" x2="235" y2="7" stroke="#60a5fa" stroke-width="1" />
+                  <line x1="250" y1="0" x2="250" y2="12" stroke="#2563eb" stroke-width="1.5" />
+                  <line x1="265" y1="0" x2="265" y2="7" stroke="#60a5fa" stroke-width="1" />
+                  <line x1="280" y1="0" x2="280" y2="10" stroke="#3b82f6" stroke-width="1" />
+                  <line x1="295" y1="0" x2="295" y2="12" stroke="#2563eb" stroke-width="1.5" />
+                  <text x="10" y="21" font-size="8" fill="#1e40af" font-weight="600" font-family="sans-serif">0</text>
+                  <text x="70" y="21" font-size="8" fill="#1e40af" font-weight="600" font-family="sans-serif">5</text>
+                  <text x="130" y="21" font-size="8" fill="#1e40af" font-weight="600" font-family="sans-serif">10</text>
+                  <text x="190" y="21" font-size="8" fill="#1e40af" font-weight="600" font-family="sans-serif">15</text>
+                  <text x="250" y="21" font-size="8" fill="#1e40af" font-weight="600" font-family="sans-serif">20</text>
+                  <text x="295" y="21" font-size="8" fill="#1e40af" font-weight="600" font-family="sans-serif">cm</text>
+                </g>
+
+                <!-- Protractor -->
+                <g transform="translate(198, 32)" filter="url(#geoDropShadow)">
+                  <path d="M 0 54 A 54 54 0 0 1 108 54 Z" fill="rgba(255, 255, 255, 0.85)" stroke="#3b82f6" stroke-width="1.5" />
+                  <path d="M 18 54 A 36 36 0 0 1 90 54 Z" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" />
+                  <!-- Degree ray ticks -->
+                  <line x1="54" y1="54" x2="54" y2="0" stroke="#2563eb" stroke-width="1.2" stroke-dasharray="2 2" />
+                  <line x1="54" y1="54" x2="16" y2="16" stroke="#60a5fa" stroke-width="1" stroke-dasharray="2 2" />
+                  <line x1="54" y1="54" x2="92" y2="16" stroke="#60a5fa" stroke-width="1" stroke-dasharray="2 2" />
+                  <circle cx="54" cy="54" r="2.5" fill="#2563eb" />
+                  <text x="54" y="26" font-size="7" fill="#1d4ed8" text-anchor="middle" font-weight="700">90°</text>
+                  <text x="22" y="38" font-size="6" fill="#2563eb" text-anchor="middle">45°</text>
+                  <text x="86" y="38" font-size="6" fill="#2563eb" text-anchor="middle">135°</text>
+                </g>
+
+                <!-- Drafting Set-Square Triangle -->
+                <g transform="translate(24, 22)" filter="url(#geoDropShadow)">
+                  <polygon points="12,110 115,110 12,18" fill="rgba(59, 130, 246, 0.18)" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" />
+                  <!-- Inner cutout -->
+                  <polygon points="28,96 85,96 28,48" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.2" stroke-linejoin="round" />
+                  <!-- Right angle marker -->
+                  <polyline points="12,100 22,100 22,110" fill="none" stroke="#2563eb" stroke-width="1.5" />
+                  <circle cx="17" cy="105" r="1" fill="#2563eb" />
+                </g>
+
+                <!-- Circle with radius and center dot -->
+                <g transform="translate(108, 38)">
+                  <circle cx="44" cy="44" r="38" fill="rgba(37, 99, 235, 0.08)" stroke="#2563eb" stroke-width="2" stroke-dasharray="4 2" />
+                  <line x1="44" y1="44" x2="82" y2="44" stroke="#1d4ed8" stroke-width="1.5" />
+                  <circle cx="44" cy="44" r="3" fill="#1d4ed8" />
+                  <text x="61" y="40" font-size="8" fill="#1d4ed8" font-weight="700">r</text>
+                </g>
+
+                <!-- Drafting Compass Tool -->
+                <g transform="translate(150, 18)" filter="url(#geoDropShadow)">
+                  <!-- Pivot top -->
+                  <circle cx="20" cy="10" r="5" fill="#3b82f6" stroke="#1e40af" stroke-width="1.5" />
+                  <rect x="18" y="2" width="4" height="6" rx="1" fill="#1e40af" />
+                  <!-- Needle leg -->
+                  <line x1="18" y1="14" x2="2" y2="76" stroke="#475569" stroke-width="3" stroke-linecap="round" />
+                  <polygon points="2,76 0,84 4,76" fill="#0f172a" />
+                  <!-- Pencil leg with joint -->
+                  <line x1="22" y1="14" x2="38" y2="60" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" />
+                  <!-- Pencil barrel and graphite tip -->
+                  <polygon points="36,60 40,60 42,78 34,78" fill="#f59e0b" stroke="#d97706" stroke-width="1" />
+                  <polygon points="34,78 42,78 38,86" fill="#fde68a" stroke="#d97706" stroke-width="0.8" />
+                  <polygon points="36.5,83 39.5,83 38,86" fill="#1e293b" />
+                  <!-- Compass adjustment screw -->
+                  <circle cx="20" cy="36" r="3" fill="#94a3b8" stroke="#475569" stroke-width="1" />
+                </g>
+              </svg>
+            </div>
+            <div class="card-body">
+              <div class="card-info">
+                <span class="card-title">Geometry</span>
+                <span class="card-tag tag-blue">Drafting &amp; Shapes</span>
+              </div>
+              <span class="card-arrow" aria-hidden="true">→</span>
+            </div>
+          </a>
+
+          <!-- 2. ALGEBRA CARD (Green Theme) -->
+          <a href="#algebra" class="category-card card-algebra" id="cardAlgebra" aria-label="Open Algebra Lab">
+            <div class="card-visual-wrapper" id="cardVisualAlgebra">
+              <svg class="card-svg" viewBox="0 0 340 190" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <!-- Coordinate Plane Background -->
+                <rect width="340" height="190" rx="8" fill="#ecfdf5" />
+                <defs>
+                  <pattern id="algGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#a7f3d0" stroke-width="0.75" />
+                  </pattern>
+                  <filter id="algDropShadow" x="-10%" y="-10%" width="120%" height="120%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#065f46" flood-opacity="0.12" />
+                  </filter>
+                </defs>
+                <rect width="340" height="190" rx="8" fill="url(#algGrid)" />
+
+                <!-- Coordinate Axes (X & Y) -->
+                <!-- Y-Axis -->
+                <line x1="170" y1="12" x2="170" y2="178" stroke="#059669" stroke-width="2" />
+                <polygon points="170,8 166,16 174,16" fill="#059669" />
+                <text x="178" y="20" font-size="12" font-weight="700" fill="#047857" font-style="italic">y</text>
+                <!-- X-Axis -->
+                <line x1="14" y1="125" x2="326" y2="125" stroke="#059669" stroke-width="2" />
+                <polygon points="330,125 322,121 322,129" fill="#059669" />
+                <text x="318" y="140" font-size="12" font-weight="700" fill="#047857" font-style="italic">x</text>
+
+                <!-- Axis Tick Marks -->
+                <line x1="130" y1="122" x2="130" y2="128" stroke="#059669" stroke-width="1.5" />
+                <line x1="90" y1="122" x2="90" y2="128" stroke="#059669" stroke-width="1.5" />
+                <line x1="210" y1="122" x2="210" y2="128" stroke="#059669" stroke-width="1.5" />
+                <line x1="250" y1="122" x2="250" y2="128" stroke="#059669" stroke-width="1.5" />
+                <line x1="167" y1="85" x2="173" y2="85" stroke="#059669" stroke-width="1.5" />
+                <line x1="167" y1="45" x2="173" y2="45" stroke="#059669" stroke-width="1.5" />
+
+                <!-- Parabola Curve y = a(x - h)^2 + k -->
+                <path d="M 85 30 Q 170 165 255 30" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" />
+                <circle cx="170" cy="125" r="3" fill="#065f46" />
+                <circle cx="170" cy="98" r="3.5" fill="#059669" stroke="#ffffff" stroke-width="1.5" />
+
+                <!-- Floating Equation Badges -->
+                <!-- Badge 1: x² + 2x = 8 -->
+                <g transform="translate(18, 22)" filter="url(#algDropShadow)">
+                  <rect x="0" y="0" width="112" height="32" rx="6" fill="#ffffff" stroke="#34d399" stroke-width="1.5" />
+                  <text x="56" y="21" font-size="12" font-weight="700" fill="#065f46" text-anchor="middle" font-family="'Courier New', monospace">x² + 2x = 8</text>
+                </g>
+
+                <!-- Badge 2: y = 2x + 1 -->
+                <g transform="translate(216, 68)" filter="url(#algDropShadow)">
+                  <rect x="0" y="0" width="94" height="28" rx="6" fill="#ffffff" stroke="#6ee7b7" stroke-width="1.5" />
+                  <text x="47" y="18" font-size="11" font-weight="700" fill="#047857" text-anchor="middle" font-family="'Courier New', monospace">y = 2x + 1</text>
+                </g>
+
+                <!-- Badge 3: roots / variables -->
+                <g transform="translate(24, 82)" filter="url(#algDropShadow)">
+                  <rect x="0" y="0" width="80" height="26" rx="6" fill="#d1fae5" stroke="#10b981" stroke-width="1" />
+                  <text x="40" y="17" font-size="10" font-weight="600" fill="#065f46" text-anchor="middle">x = 2, -4</text>
+                </g>
+
+                <!-- Intercept Points Highlight -->
+                <circle cx="130" cy="125" r="4" fill="#047857" stroke="#ffffff" stroke-width="1.5" />
+                <circle cx="210" cy="125" r="4" fill="#047857" stroke="#ffffff" stroke-width="1.5" />
+              </svg>
+            </div>
+            <div class="card-body">
+              <div class="card-info">
+                <span class="card-title">Algebra</span>
+                <span class="card-tag tag-green">Equations &amp; Curves</span>
+              </div>
+              <span class="card-arrow" aria-hidden="true">→</span>
+            </div>
+          </a>
+
+          <!-- 3. TRIGONOMETRY CARD (Orange Theme) -->
+          <a href="#trigonometry" class="category-card card-trigonometry" id="cardTrigonometry" aria-label="Open Trigonometry Lab">
+            <div class="card-visual-wrapper" id="cardVisualTrig">
+              <svg class="card-svg" viewBox="0 0 340 190" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <!-- Warm Orange Background -->
+                <rect width="340" height="190" rx="8" fill="#fff7ed" />
+                <defs>
+                  <pattern id="trigGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#ffedd5" stroke-width="0.8" />
+                  </pattern>
+                  <filter id="trigDropShadow" x="-10%" y="-10%" width="120%" height="120%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#9a3412" flood-opacity="0.12" />
+                  </filter>
+                </defs>
+                <rect width="340" height="190" rx="8" fill="url(#trigGrid)" />
+
+                <!-- Unit Circle on the Left -->
+                <g transform="translate(85, 95)">
+                  <!-- Circle axes -->
+                  <line x1="-65" y1="0" x2="65" y2="0" stroke="#fdba74" stroke-width="1.5" />
+                  <line x1="0" y1="-65" x2="0" y2="65" stroke="#fdba74" stroke-width="1.5" />
+                  <!-- Unit Circle -->
+                  <circle cx="0" cy="0" r="50" fill="rgba(249, 115, 22, 0.08)" stroke="#ea580c" stroke-width="2.5" />
+                  
+                  <!-- Angle θ Arc (45 degrees) -->
+                  <path d="M 18 0 A 18 18 0 0 0 12.7 -12.7" fill="none" stroke="#c2410c" stroke-width="2" />
+                  <text x="22" y="-5" font-size="10" font-weight="700" fill="#c2410c">θ</text>
+                  
+                  <!-- Radius vector line to (35.3, -35.3) -->
+                  <line x1="0" y1="0" x2="35.3" y2="-35.3" stroke="#ea580c" stroke-width="2" />
+                  <!-- Right triangle inside circle (cos & sin components) -->
+                  <line x1="0" y1="0" x2="35.3" y2="0" stroke="#3b82f6" stroke-width="2.5" /> <!-- cos -->
+                  <line x1="35.3" y1="0" x2="35.3" y2="-35.3" stroke="#16a34a" stroke-width="2.5" /> <!-- sin -->
+                  <!-- Point on unit circle -->
+                  <circle cx="35.3" cy="-35.3" r="4.5" fill="#ea580c" stroke="#ffffff" stroke-width="1.5" />
+                  <circle cx="0" cy="0" r="3" fill="#9a3412" />
+                  
+                  <!-- Projections & Wave connector -->
+                  <line x1="35.3" y1="-35.3" x2="80" y2="-35.3" stroke="#ea580c" stroke-width="1.2" stroke-dasharray="3 3" />
+                  <text x="38" y="-18" font-size="8" font-weight="700" fill="#16a34a">sin</text>
+                  <text x="14" y="11" font-size="8" font-weight="700" fill="#2563eb">cos</text>
+                </g>
+
+                <!-- Sine Wave Flowing Out horizontally -->
+                <g transform="translate(165, 95)">
+                  <!-- Wave baseline -->
+                  <line x1="0" y1="0" x2="160" y2="0" stroke="#fdba74" stroke-width="1.5" />
+                  <!-- Sine Wave Curve: amplitude 35.3, wavelength ~100 -->
+                  <path d="M 0 -35.3 C 25 -70 50 0 75 0 C 100 0 125 -70 150 -35.3" fill="none" stroke="#ea580c" stroke-width="3" stroke-linecap="round" />
+                  <!-- Wave peak marker -->
+                  <circle cx="25" cy="-35.3" r="3.5" fill="#ea580c" stroke="#ffffff" stroke-width="1.5" />
+                  <!-- Wave labels -->
+                  <text x="75" y="14" font-size="8" font-weight="600" fill="#9a3412">π</text>
+                  <text x="145" y="14" font-size="8" font-weight="600" fill="#9a3412">2π</text>
+                </g>
+
+                <!-- Floating Trigonometric Labels -->
+                <g transform="translate(242, 22)" filter="url(#trigDropShadow)">
+                  <rect x="0" y="0" width="76" height="26" rx="6" fill="#ffffff" stroke="#fb923c" stroke-width="1.2" />
+                  <text x="38" y="17" font-size="11" font-weight="700" fill="#c2410c" text-anchor="middle">sin²θ + cos²θ = 1</text>
+                </g>
+                <g transform="translate(260, 140)" filter="url(#trigDropShadow)">
+                  <rect x="0" y="0" width="62" height="24" rx="5" fill="#ffedd5" stroke="#ea580c" stroke-width="1" />
+                  <text x="31" y="16" font-size="10" font-weight="700" fill="#9a3412" text-anchor="middle">tan θ</text>
+                </g>
+              </svg>
+            </div>
+            <div class="card-body">
+              <div class="card-info">
+                <span class="card-title">Trigonometry</span>
+                <span class="card-tag tag-orange">Unit Circle &amp; Waves</span>
+              </div>
+              <span class="card-arrow" aria-hidden="true">→</span>
+            </div>
+          </a>
+
+          <!-- 4. CALCULUS CARD (Purple Theme) -->
+          <a href="#calculus" class="category-card card-calculus" id="cardCalculus" aria-label="Open Calculus Lab">
+            <div class="card-visual-wrapper" id="cardVisualCalc">
+              <svg class="card-svg" viewBox="0 0 340 190" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <!-- Purple Grid Background -->
+                <rect width="340" height="190" rx="8" fill="#faf5ff" />
+                <defs>
+                  <pattern id="calcGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f3e8ff" stroke-width="0.8" />
+                  </pattern>
+                  <linearGradient id="calcAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#9333ea" stop-opacity="0.35" />
+                    <stop offset="100%" stop-color="#9333ea" stop-opacity="0.05" />
+                  </linearGradient>
+                  <filter id="calcDropShadow" x="-10%" y="-10%" width="120%" height="120%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#581c87" flood-opacity="0.12" />
+                  </filter>
+                </defs>
+                <rect width="340" height="190" rx="8" fill="url(#calcGrid)" />
+
+                <!-- Axes -->
+                <line x1="36" y1="16" x2="36" y2="168" stroke="#c084fc" stroke-width="1.5" />
+                <line x1="26" y1="148" x2="320" y2="148" stroke="#c084fc" stroke-width="1.5" />
+
+                <!-- Shaded Area Under Curve (Riemann Integration) -->
+                <path d="M 68 148 L 68 122 C 100 80, 140 135, 185 85 C 220 45, 255 105, 275 148 Z" fill="url(#calcAreaGrad)" />
+
+                <!-- Vertical Riemann strips -->
+                <line x1="90" y1="148" x2="90" y2="108" stroke="#c084fc" stroke-width="1" stroke-dasharray="2 2" />
+                <line x1="120" y1="148" x2="120" y2="114" stroke="#c084fc" stroke-width="1" stroke-dasharray="2 2" />
+                <line x1="150" y1="148" x2="150" y2="116" stroke="#c084fc" stroke-width="1" stroke-dasharray="2 2" />
+                <line x1="180" y1="148" x2="180" y2="88" stroke="#c084fc" stroke-width="1" stroke-dasharray="2 2" />
+                <line x1="210" y1="148" x2="210" y2="58" stroke="#c084fc" stroke-width="1" stroke-dasharray="2 2" />
+                <line x1="240" y1="148" x2="240" y2="86" stroke="#c084fc" stroke-width="1" stroke-dasharray="2 2" />
+
+                <!-- Function Curve f(x) -->
+                <path d="M 40 145 C 80 85, 130 140, 185 85 C 230 40, 270 120, 310 145" fill="none" stroke="#9333ea" stroke-width="3" stroke-linecap="round" />
+
+                <!-- Tangent Line at Inflection Point (210, 58) -->
+                <line x1="140" y1="110" x2="280" y2="6" stroke="#ec4899" stroke-width="2" stroke-dasharray="4 2" />
+                <circle cx="210" cy="58" r="4.5" fill="#ec4899" stroke="#ffffff" stroke-width="1.5" />
+                
+                <!-- Slope notation dy/dx -->
+                <g transform="translate(230, 38)">
+                  <text x="0" y="0" font-size="10" font-weight="700" fill="#be185d" font-family="'Times New Roman', serif" font-style="italic">dy/dx</text>
+                </g>
+
+                <!-- Area notation dx -->
+                <line x1="180" y1="156" x2="210" y2="156" stroke="#7e22ce" stroke-width="1.5" />
+                <polyline points="183,153 180,156 183,159" fill="none" stroke="#7e22ce" stroke-width="1.2" />
+                <polyline points="207,153 210,156 207,159" fill="none" stroke="#7e22ce" stroke-width="1.2" />
+                <text x="195" y="166" font-size="9" font-weight="700" fill="#7e22ce" text-anchor="middle">dx</text>
+
+                <!-- Floating Integral Symbol and Formula Badge -->
+                <g transform="translate(18, 22)" filter="url(#calcDropShadow)">
+                  <rect x="0" y="0" width="102" height="34" rx="6" fill="#ffffff" stroke="#c084fc" stroke-width="1.5" />
+                  <text x="14" y="24" font-size="20" font-weight="400" fill="#7e22ce" font-family="'Times New Roman', serif">∫</text>
+                  <text x="28" y="22" font-size="12" font-weight="700" fill="#581c87" font-family="'Times New Roman', serif" font-style="italic">f(x) dx</text>
+                </g>
+              </svg>
+            </div>
+            <div class="card-body">
+              <div class="card-info">
+                <span class="card-title">Calculus</span>
+                <span class="card-tag tag-purple">Derivatives &amp; Integrals</span>
+              </div>
+              <span class="card-arrow" aria-hidden="true">→</span>
+            </div>
+          </a>
+
+          <!-- 5. PROBABILITY CARD (Red/Pink Theme) -->
+          <a href="#probability" class="category-card card-probability" id="cardProbability" aria-label="Open Probability Lab">
+            <div class="card-visual-wrapper" id="cardVisualProb">
+              <svg class="card-svg" viewBox="0 0 340 190" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <!-- Red/Pink Background -->
+                <rect width="340" height="190" rx="8" fill="#fff1f2" />
+                <defs>
+                  <pattern id="probGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#ffe4e6" stroke-width="0.8" />
+                  </pattern>
+                  <filter id="probDropShadow" x="-10%" y="-10%" width="120%" height="120%">
+                    <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#9f1239" flood-opacity="0.14" />
+                  </filter>
+                  <linearGradient id="bellCurveGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.3" />
+                    <stop offset="100%" stop-color="#f43f5e" stop-opacity="0.05" />
+                  </linearGradient>
+                </defs>
+                <rect width="340" height="190" rx="8" fill="url(#probGrid)" />
+
+                <!-- Bell Curve (Gaussian Normal Distribution) -->
+                <!-- Shaded center +/- 1 sigma -->
+                <path d="M 120 145 C 145 145, 155 45, 170 45 C 185 45, 195 145, 220 145 Z" fill="url(#bellCurveGrad)" />
+                <!-- Full curve -->
+                <path d="M 80 145 C 120 145, 145 45, 170 45 C 195 45, 220 145, 260 145" fill="none" stroke="#e11d48" stroke-width="2.5" stroke-linecap="round" />
+                <line x1="170" y1="45" x2="170" y2="145" stroke="#e11d48" stroke-width="1.2" stroke-dasharray="3 2" />
+                <text x="170" y="38" font-size="9" font-weight="700" fill="#be123c" text-anchor="middle">μ</text>
+
+                <!-- Probability Bar Chart (Distribution Histogram) -->
+                <g transform="translate(236, 92)">
+                  <rect x="0" y="32" width="10" height="22" rx="2" fill="#fda4af" />
+                  <rect x="14" y="16" width="10" height="38" rx="2" fill="#fb7185" />
+                  <rect x="28" y="4" width="10" height="50" rx="2" fill="#e11d48" />
+                  <rect x="42" y="18" width="10" height="36" rx="2" fill="#fb7185" />
+                  <rect x="56" y="36" width="10" height="18" rx="2" fill="#fda4af" />
+                  <line x1="-4" y1="54" x2="70" y2="54" stroke="#e11d48" stroke-width="1.2" />
+                </g>
+
+                <!-- 3D Isometric Die 1 (Showing 5 and 3) -->
+                <g transform="translate(30, 52)" filter="url(#probDropShadow)">
+                  <!-- Die Top Face -->
+                  <polygon points="30,0 58,14 28,28 0,14" fill="#ffffff" stroke="#f43f5e" stroke-width="1.5" stroke-linejoin="round" />
+                  <!-- Die Left Face -->
+                  <polygon points="0,14 28,28 28,62 0,48" fill="#ffe4e6" stroke="#f43f5e" stroke-width="1.5" stroke-linejoin="round" />
+                  <!-- Die Right Face -->
+                  <polygon points="28,28 58,14 58,48 28,62" fill="#ffffff" stroke="#f43f5e" stroke-width="1.5" stroke-linejoin="round" />
+                  <!-- Pips on Top (face: 3) -->
+                  <circle cx="15" cy="11" r="2.2" fill="#be123c" />
+                  <circle cx="29" cy="14" r="2.2" fill="#be123c" />
+                  <circle cx="43" cy="17" r="2.2" fill="#be123c" />
+                  <!-- Pips on Left (face: 5) -->
+                  <circle cx="9" cy="27" r="2" fill="#be123c" />
+                  <circle cx="20" cy="33" r="2" fill="#be123c" />
+                  <circle cx="14" cy="42" r="2" fill="#be123c" />
+                  <circle cx="8" cy="51" r="2" fill="#be123c" />
+                  <circle cx="20" cy="56" r="2" fill="#be123c" />
+                  <!-- Pips on Right (face: 2) -->
+                  <circle cx="38" cy="38" r="2" fill="#be123c" />
+                  <circle cx="48" cy="46" r="2" fill="#be123c" />
+                </g>
+
+                <!-- Flipping Coin with shine & arc -->
+                <g transform="translate(94, 20)" filter="url(#probDropShadow)">
+                  <circle cx="18" cy="18" r="16" fill="#fef08a" stroke="#ca8a04" stroke-width="2" />
+                  <circle cx="18" cy="18" r="13" fill="#fde047" stroke="#eab308" stroke-width="1" />
+                  <text x="18" y="24" font-size="14" font-weight="900" fill="#a16207" text-anchor="middle" font-family="serif">1</text>
+                  <!-- Motion Arc -->
+                  <path d="M 2 36 C -4 20, -2 8, 8 2" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2" />
+                </g>
+
+                <!-- Floating Percentage Symbols -->
+                <g transform="translate(18, 134)" filter="url(#probDropShadow)">
+                  <rect x="0" y="0" width="56" height="24" rx="5" fill="#ffffff" stroke="#f43f5e" stroke-width="1.2" />
+                  <text x="28" y="16" font-size="11" font-weight="800" fill="#be123c" text-anchor="middle">95%</text>
+                </g>
+                <g transform="translate(186, 16)" filter="url(#probDropShadow)">
+                  <rect x="0" y="0" width="68" height="24" rx="5" fill="#ffffff" stroke="#fb7185" stroke-width="1.2" />
+                  <text x="34" y="16" font-size="10" font-weight="700" fill="#9f1239" text-anchor="middle">P(X = k)</text>
+                </g>
+              </svg>
+            </div>
+            <div class="card-body">
+              <div class="card-info">
+                <span class="card-title">Probability</span>
+                <span class="card-tag tag-rose">Statistics &amp; Chance</span>
+              </div>
+              <span class="card-arrow" aria-hidden="true">→</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 2: DEDICATED LAB VIEW (Header + Category Workspace)  -->
+      <!-- ========================================================= -->
+      <section class="view-panel" id="labView">
+        <!-- Dedicated Page Top Header -->
+        <div class="lab-page-header" id="labPageHeader">
+          <div class="lab-header-left">
+            <a href="#home" class="back-home-btn" id="backToHomeBtn" aria-label="Return to MathLab Home">
+              <span class="back-arrow" aria-hidden="true">←</span>
+              <span class="back-text">Back to Home</span>
+            </a>
+            <div class="lab-title-group">
+              <h1 class="lab-page-title" id="labPageTitle">Geometry</h1>
+              <span class="lab-badge" id="labBadge">Laboratory</span>
+            </div>
+          </div>
+          <div class="lab-header-right" id="labHeaderRight">
+            <span class="lab-tagline-indicator" id="labSubjectSubtitle">Interactive Shapes &amp; Real-time Measurements</span>
+          </div>
+        </div>
+
+        <!-- 2A) GEOMETRY WORKSPACE (Full-Screen Infinite Grid + Floating Panels) -->
+        <div class="lab-workspace active" id="geometryWorkspace">
+          <!-- Full-Screen Infinite HTML5 Canvas (Desmos-like 2D) -->
+          <canvas id="geometryCanvas" class="infinite-grid-canvas"></canvas>
+
+          <!-- Full-Screen Three.js WebGL 3D Scene Viewport (Desmos 3D / Blender-like) -->
+          <div id="threeJsContainer" class="threejs-canvas-container" style="display: none;"></div>
+
+          <!-- Top-Left Navigation Bar: Back to Home & Title & 2D/3D Toggle -->
+          <div class="geo-floating-top-left" id="geoTopLeft">
+            <a href="#home" class="geo-back-btn" id="geoBackBtn" aria-label="Return to MathLab Home">
+              <span class="back-arrow" aria-hidden="true">←</span>
+              <span class="back-text">Back to Home</span>
+            </a>
+            <div class="geo-lab-pill" id="geoLabPill">
+              <span class="geo-lab-dot" aria-hidden="true"></span>
+              <span class="geo-lab-name">Geometry Laboratory</span>
+            </div>
+            <!-- 2D / 3D Mode Toggle Switch -->
+            <div class="view-mode-toggle" id="viewModeToggle" role="group" aria-label="Dimension View Mode">
+              <button type="button" class="toggle-option active" id="btnMode2D" data-mode="2d">2D</button>
+              <button type="button" class="toggle-option" id="btnMode3D" data-mode="3d">3D</button>
+            </div>
+
+            <!-- 3D Controls Toolbar: UI Size Slider (50%-100%, default 75%) & Minimize Button -->
+            <div class="geo-3d-toolbar" id="geo3DToolbar" style="display: none;">
+              <div class="ui-size-control-wrap" title="Adjust 3D Controls Size (50% - 100%)">
+                <span class="ui-size-label">UI Size:</span>
+                <input type="range" id="geoUiSizeSlider" min="50" max="100" value="75" step="5" class="ui-size-slider" aria-label="3D UI Scale" />
+                <span class="ui-size-val" id="geoUiSizeVal">75%</span>
+              </div>
+              <button type="button" class="geo-mini-btn" id="btnMinimize3D" title="Minimize 3D Controls [−]" aria-label="Minimize 3D Controls">
+                <span class="mini-icon">−</span>
+                <span class="mini-text">Minimize</span>
+              </button>
+            </div>
+
+            <!-- Floating Restore Tab when 3D Controls are Minimized -->
+            <button type="button" class="geo-restore-pill" id="btnRestore3D" style="display: none;" title="Restore 3D Controls [⚙ 3D]">
+              <span class="restore-icon">⚙</span>
+              <span class="restore-text">3D Controls</span>
+            </button>
+          </div>
+
+          <!-- Top-Left Floating Panel: Shape Selector (Toolbox) -->
+          <div class="floating-glass-panel shape-selector-panel" id="shapeSelectorPanel">
+            <!-- External Arrow Toggle Tab -->
+            <button type="button" class="panel-toggle-tab tab-left-panel" id="btnToggleShapeSelector" aria-label="Toggle Shapes Panel" title="Close Shapes Panel" aria-expanded="true">
+              <svg class="panel-toggle-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+
+            <div class="floating-panel-header">
+              <div class="panel-header-title-group">
+                <span class="panel-header-icon" aria-hidden="true">📐</span>
+                <span class="panel-header-title">Shapes</span>
+              </div>
+            </div>
+
+            <div class="shape-selector-scroll-wrap" id="shapeSelectorScrollWrap">
+              <div class="shape-selector-list" id="shapeSelectorList">
+                <!-- Square -->
+                <label class="floating-shape-item" id="shapeItem_square" data-shape="square">
+                  <input type="checkbox" class="shape-checkbox-input" id="check_square" data-shape="square" checked aria-label="Toggle Square" />
+                  <span class="shape-color-indicator" style="background-color: #2563eb;"></span>
+                  <span class="shape-item-label">Square</span>
+                </label>
+
+                <!-- Rectangle -->
+                <label class="floating-shape-item" id="shapeItem_rectangle" data-shape="rectangle">
+                  <input type="checkbox" class="shape-checkbox-input" id="check_rectangle" data-shape="rectangle" aria-label="Toggle Rectangle" />
+                  <span class="shape-color-indicator" style="background-color: #059669;"></span>
+                  <span class="shape-item-label">Rectangle</span>
+                </label>
+
+                <!-- Circle -->
+                <label class="floating-shape-item" id="shapeItem_circle" data-shape="circle">
+                  <input type="checkbox" class="shape-checkbox-input" id="check_circle" data-shape="circle" aria-label="Toggle Circle" />
+                  <span class="shape-color-indicator" style="background-color: #dc2626;"></span>
+                  <span class="shape-item-label">Circle</span>
+                </label>
+
+                <!-- Triangle -->
+                <label class="floating-shape-item" id="shapeItem_triangle" data-shape="triangle">
+                  <input type="checkbox" class="shape-checkbox-input" id="check_triangle" data-shape="triangle" aria-label="Toggle Triangle" />
+                  <span class="shape-color-indicator" style="background-color: #ea580c;"></span>
+                  <span class="shape-item-label">Triangle</span>
+                </label>
+
+                <!-- Pentagon -->
+                <label class="floating-shape-item" id="shapeItem_pentagon" data-shape="pentagon">
+                  <input type="checkbox" class="shape-checkbox-input" id="check_pentagon" data-shape="pentagon" aria-label="Toggle Pentagon" />
+                  <span class="shape-color-indicator" style="background-color: #9333ea;"></span>
+                  <span class="shape-item-label">Pentagon</span>
+                </label>
+
+                <!-- Hexagon -->
+                <label class="floating-shape-item" id="shapeItem_hexagon" data-shape="hexagon">
+                  <input type="checkbox" class="shape-checkbox-input" id="check_hexagon" data-shape="hexagon" aria-label="Toggle Hexagon" />
+                  <span class="shape-color-indicator" style="background-color: #0d9488;"></span>
+                  <span class="shape-item-label">Hexagon</span>
+                </label>
+
+                <!-- Ellipse -->
+                <label class="floating-shape-item" id="shapeItem_ellipse" data-shape="ellipse">
+                  <input type="checkbox" class="shape-checkbox-input" id="check_ellipse" data-shape="ellipse" aria-label="Toggle Ellipse" />
+                  <span class="shape-color-indicator" style="background-color: #db2777;"></span>
+                  <span class="shape-item-label">Ellipse</span>
+                </label>
+              </div>
+
+              <!-- 3D-Only Shapes Section (Visible only in 3D mode) -->
+              <div class="shape-selector-3d-section" id="shapes3dSection" style="display: none;">
+                <div class="shapes-3d-header">
+                  <span class="shapes-3d-title">3D Shapes</span>
+                </div>
+                <div class="shape-selector-list" id="shapeSelector3dList">
+                  <!-- Sphere -->
+                  <label class="floating-shape-item" id="shapeItem_sphere" data-shape="sphere">
+                    <input type="checkbox" class="shape-checkbox-input" id="check_sphere" data-shape="sphere" aria-label="Toggle Sphere" />
+                    <span class="shape-color-indicator" style="background-color: #0284c7;"></span>
+                    <span class="shape-item-label">Sphere</span>
+                  </label>
+
+                  <!-- Pyramid -->
+                  <label class="floating-shape-item" id="shapeItem_pyramid" data-shape="pyramid">
+                    <input type="checkbox" class="shape-checkbox-input" id="check_pyramid" data-shape="pyramid" aria-label="Toggle Pyramid" />
+                    <span class="shape-color-indicator" style="background-color: #d97706;"></span>
+                    <span class="shape-item-label">Pyramid</span>
+                  </label>
+
+                  <!-- Cone -->
+                  <label class="floating-shape-item" id="shapeItem_cone" data-shape="cone">
+                    <input type="checkbox" class="shape-checkbox-input" id="check_cone" data-shape="cone" aria-label="Toggle Cone" />
+                    <span class="shape-color-indicator" style="background-color: #16a34a;"></span>
+                    <span class="shape-item-label">Cone</span>
+                  </label>
+
+                  <!-- Torus -->
+                  <label class="floating-shape-item" id="shapeItem_torus" data-shape="torus">
+                    <input type="checkbox" class="shape-checkbox-input" id="check_torus" data-shape="torus" aria-label="Toggle Torus / Donut" />
+                    <span class="shape-color-indicator" style="background-color: #8b5cf6;"></span>
+                    <span class="shape-item-label">Torus / Donut</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom-Left Floating Panel: Calculator / Properties Panel (Stacked below Shapes) -->
+          <div class="floating-glass-panel properties-panel" id="propertiesPanel">
+            <!-- External Arrow Toggle Tab -->
+            <button type="button" class="panel-toggle-tab tab-left-panel" id="btnToggleProperties" aria-label="Toggle Properties Panel" title="Close Properties Panel" aria-expanded="true">
+              <svg class="panel-toggle-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+
+            <div class="floating-panel-header">
+              <div class="panel-header-title-group">
+                <span class="panel-header-icon" id="propPanelIcon" aria-hidden="true">📊</span>
+                <span class="panel-header-title" id="propPanelTitle">Properties</span>
+              </div>
+            </div>
+            <div class="properties-body" id="propertiesBody">
+              <!-- Dynamically populated properties with real-time math calculations -->
+            </div>
+          </div>
+
+          <!-- Top-Right Floating Panel: Dimension / Construction Input Panel -->
+          <div class="floating-glass-panel dimensions-panel" id="dimensionsPanel">
+            <!-- External Arrow Toggle Tab -->
+            <button type="button" class="panel-toggle-tab tab-right-panel" id="btnToggleDimensions" aria-label="Toggle Dimensions Panel" title="Close Dimensions Panel" aria-expanded="true">
+              <svg class="panel-toggle-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+
+            <div class="floating-panel-header">
+              <div class="panel-header-title-group">
+                <span class="panel-header-icon" id="dimPanelIcon" aria-hidden="true">📏</span>
+                <span class="panel-header-title" id="dimPanelTitle">Dimensions</span>
+              </div>
+            </div>
+            <div class="dimensions-body" id="dimensionsBody">
+              <!-- Dynamically populated input fields for the active shape -->
+            </div>
+          </div>
+
+          <!-- Floating Navigation / Zoom Controls -->
+          <div class="floating-glass-panel grid-controls-panel" id="gridControlsPanel">
+            <button type="button" class="grid-ctrl-btn" id="geoZoomInBtn" title="Zoom In (+)" aria-label="Zoom In">+</button>
+            <button type="button" class="grid-ctrl-btn" id="geoZoomOutBtn" title="Zoom Out (−)" aria-label="Zoom Out">−</button>
+            <button type="button" class="grid-ctrl-btn reset-origin-btn" id="geoResetViewBtn" title="Reset View to Center (0,0)" aria-label="Reset View">
+              <span aria-hidden="true">⌂</span>
+            </button>
+            <div class="grid-coords-readout" id="gridCoordsReadout" title="Cursor Position in Math Coordinates">
+              (0.00, 0.00)
+            </div>
+          </div>
+        </div>
+
+        <!-- 2B) OTHER CATEGORY WORKSPACES (Under Construction with Thematic Backgrounds) -->
+        <div class="lab-workspace" id="placeholderWorkspace">
+          <div class="placeholder-layout" id="placeholderLayout">
+            <!-- Sidebar Preview of modules -->
+            <aside class="lab-sidebar placeholder-sidebar" id="placeholderSidebar">
+              <div class="sidebar-header">
+                <div class="sidebar-section-title">
+                  <span id="placeholderModulesTitle">Laboratory Modules</span>
+                  <span class="sidebar-count-badge" id="placeholderModuleCount">Upcoming</span>
+                </div>
+              </div>
+              <div class="upcoming-modules-list" id="upcomingModulesList">
+                <!-- Dynamically filled depending on category -->
+              </div>
+              <div class="placeholder-sidebar-footer">
+                <p class="sidebar-note">Interactive workspaces are being ported to the MathLab rendering pipeline.</p>
+              </div>
+            </aside>
+
+            <!-- Main construction area with themed background -->
+            <section class="placeholder-main-area" id="placeholderMainArea">
+              <!-- Themed faint background illustration container -->
+              <div class="placeholder-art-bg" id="placeholderArtBg" aria-hidden="true"></div>
+
+              <!-- Center Under Construction Message Card -->
+              <div class="construction-message-card" id="constructionCard">
+                <div class="construction-icon-bubble" id="constructionIconBubble">
+                  <span class="construction-icon-char" id="constructionIconChar">∑</span>
+                </div>
+                <span class="construction-tag" id="constructionTag">Laboratory Phase</span>
+                <h2 class="construction-title" id="constructionHeading">This lab is under construction. Check back soon!</h2>
+                <p class="construction-desc" id="constructionDesc">
+                  We are developing interactive visual models, mathematical proof manipulatives, and formula explorers for this discipline.
+                </p>
+                <div class="construction-actions">
+                  <a href="#home" class="construction-home-btn" id="constructionBackBtn">
+                    ← Back to Home
+                  </a>
+                  <a href="#geometry" class="construction-geo-btn" id="constructionGoGeoBtn">
+                    Explore Geometry Lab →
+                  </a>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Vanilla JavaScript interactive engine with Three.js 3D support -->
+    <script type="module" src="./script.js"></script>
+  </body>
+</html>

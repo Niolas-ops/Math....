@@ -1,0 +1,6 @@
+{
+  "name": "MathLab",
+  "description": "A virtual math laboratory where students and teachers can explore geometry and mathematical concepts visually and interactively.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
