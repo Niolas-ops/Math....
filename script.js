@@ -129,200 +129,476 @@ const LABS_CONFIG = {
 
 // --- GEOMETRY DATA STRUCTURES ---
 
-const SHAPES = {
+const SHAPE_TEMPLATES = {
+  // --- 2D / PLANE SHAPES ---
   square: {
-    id: 'square',
+    type: 'square',
     name: 'Square',
-    visible: true,
+    category: '2d',
     color: '#2563eb',
     fillColor: 'rgba(37, 99, 235, 0.22)',
     strokeColor: '#2563eb',
-    x: 0,
-    y: 0,
-    y3D: 0,
-    z: 0,
-    rotation: 0,
+    side: 4,
     depth: 3,
     height3D: 3,
-    solid3DType: 'flat',
-    side: 4
+    solid3DType: 'flat'
   },
   rectangle: {
-    id: 'rectangle',
+    type: 'rectangle',
     name: 'Rectangle',
-    visible: false,
+    category: '2d',
     color: '#059669',
-    fillColor: 'rgba(160, 185, 129, 0.22)',
+    fillColor: 'rgba(5, 150, 105, 0.22)',
     strokeColor: '#059669',
-    x: 0,
-    y: 0,
-    y3D: 0,
-    z: 0,
-    rotation: 0,
+    width: 4,
+    length: 2.5,
     depth: 3,
     height3D: 3,
-    solid3DType: 'flat',
-    width: 4,
-    length: 2
+    solid3DType: 'flat'
   },
   circle: {
-    id: 'circle',
+    type: 'circle',
     name: 'Circle',
-    visible: false,
+    category: '2d',
     color: '#dc2626',
-    fillColor: 'rgba(239, 68, 68, 0.22)',
+    fillColor: 'rgba(220, 38, 38, 0.22)',
     strokeColor: '#dc2626',
-    x: 0,
-    y: 0,
-    y3D: 0,
-    z: 0,
-    rotation: 0,
+    radius: 3,
     depth: 3,
     height3D: 3,
-    solid3DType: 'flat',
-    radius: 3
+    solid3DType: 'flat'
   },
   triangle: {
-    id: 'triangle',
+    type: 'triangle',
     name: 'Triangle',
-    visible: false,
+    category: '2d',
     color: '#ea580c',
-    fillColor: 'rgba(249, 115, 22, 0.22)',
+    fillColor: 'rgba(234, 88, 12, 0.22)',
     strokeColor: '#ea580c',
-    x: 0,
-    y: 0,
-    y3D: 0,
-    z: 0,
-    rotation: 0,
-    depth: 3,
-    height3D: 3,
-    solid3DType: 'flat',
     sideA: 3,
     sideB: 4,
-    sideC: 5
-  },
-  pentagon: {
-    id: 'pentagon',
-    name: 'Pentagon',
-    visible: false,
-    color: '#9333ea',
-    fillColor: 'rgba(168, 85, 247, 0.22)',
-    strokeColor: '#9333ea',
-    x: 0,
-    y: 0,
-    y3D: 0,
-    z: 0,
-    rotation: 0,
+    sideC: 5,
     depth: 3,
     height3D: 3,
-    solid3DType: 'flat',
-    side: 3
+    solid3DType: 'flat'
+  },
+  right_triangle: {
+    type: 'right_triangle',
+    name: 'Right Triangle',
+    category: '2d',
+    color: '#d97706',
+    fillColor: 'rgba(217, 119, 6, 0.22)',
+    strokeColor: '#d97706',
+    base: 4,
+    height: 3,
+    depth: 3,
+    height3D: 3,
+    solid3DType: 'flat'
+  },
+  equilateral_triangle: {
+    type: 'equilateral_triangle',
+    name: 'Equilateral Triangle',
+    category: '2d',
+    color: '#f59e0b',
+    fillColor: 'rgba(245, 158, 11, 0.22)',
+    strokeColor: '#f59e0b',
+    side: 4,
+    depth: 3,
+    height3D: 3,
+    solid3DType: 'flat'
+  },
+  isosceles_triangle: {
+    type: 'isosceles_triangle',
+    name: 'Isosceles Triangle',
+    category: '2d',
+    color: '#e11d48',
+    fillColor: 'rgba(225, 29, 72, 0.22)',
+    strokeColor: '#e11d48',
+    base: 4,
+    leg: 5,
+    depth: 3,
+    height3D: 3,
+    solid3DType: 'flat'
+  },
+  parallelogram: {
+    type: 'parallelogram',
+    name: 'Parallelogram',
+    category: '2d',
+    color: '#0284c7',
+    fillColor: 'rgba(2, 132, 199, 0.22)',
+    strokeColor: '#0284c7',
+    base: 5,
+    height: 3,
+    skew: 1.5,
+    depth: 3,
+    height3D: 3,
+    solid3DType: 'flat'
+  },
+  rhombus: {
+    type: 'rhombus',
+    name: 'Rhombus',
+    category: '2d',
+    color: '#8b5cf6',
+    fillColor: 'rgba(139, 92, 246, 0.22)',
+    strokeColor: '#8b5cf6',
+    diag1: 5,
+    diag2: 3.5,
+    depth: 3,
+    height3D: 3,
+    solid3DType: 'flat'
+  },
+  trapezoid: {
+    type: 'trapezoid',
+    name: 'Trapezoid',
+    category: '2d',
+    color: '#4f46e5',
+    fillColor: 'rgba(79, 70, 229, 0.22)',
+    strokeColor: '#4f46e5',
+    topBase: 3,
+    bottomBase: 5,
+    height: 3,
+    depth: 3,
+    height3D: 3,
+    solid3DType: 'flat'
+  },
+  kite: {
+    type: 'kite',
+    name: 'Kite',
+    category: '2d',
+    color: '#06b6d4',
+    fillColor: 'rgba(6, 182, 212, 0.22)',
+    strokeColor: '#06b6d4',
+    diagX: 4,
+    topH: 2,
+    bottomH: 3.5,
+    depth: 3,
+    height3D: 3,
+    solid3DType: 'flat'
+  },
+  pentagon: {
+    type: 'pentagon',
+    name: 'Pentagon',
+    category: '2d',
+    color: '#9333ea',
+    fillColor: 'rgba(147, 51, 234, 0.22)',
+    strokeColor: '#9333ea',
+    side: 3,
+    depth: 3,
+    height3D: 3,
+    solid3DType: 'flat'
   },
   hexagon: {
-    id: 'hexagon',
+    type: 'hexagon',
     name: 'Hexagon',
-    visible: false,
+    category: '2d',
     color: '#0d9488',
     fillColor: 'rgba(13, 148, 136, 0.22)',
     strokeColor: '#0d9488',
-    x: 0,
-    y: 0,
-    y3D: 0,
-    z: 0,
-    rotation: 0,
+    side: 3,
     depth: 3,
     height3D: 3,
-    solid3DType: 'flat',
-    side: 3
+    solid3DType: 'flat'
+  },
+  regular_polygon: {
+    type: 'regular_polygon',
+    name: 'Regular Octagon',
+    category: '2d',
+    color: '#14b8a6',
+    fillColor: 'rgba(20, 184, 166, 0.22)',
+    strokeColor: '#14b8a6',
+    sides: 8,
+    side: 2.2,
+    depth: 3,
+    height3D: 3,
+    solid3DType: 'flat'
+  },
+  semicircle: {
+    type: 'semicircle',
+    name: 'Semicircle',
+    category: '2d',
+    color: '#f43f5e',
+    fillColor: 'rgba(244, 63, 94, 0.22)',
+    strokeColor: '#f43f5e',
+    radius: 3,
+    depth: 3,
+    height3D: 3,
+    solid3DType: 'flat'
   },
   ellipse: {
-    id: 'ellipse',
+    type: 'ellipse',
     name: 'Ellipse',
-    visible: false,
+    category: '2d',
     color: '#db2777',
     fillColor: 'rgba(219, 39, 119, 0.22)',
     strokeColor: '#db2777',
-    x: 0,
-    y: 0,
-    y3D: 0,
-    z: 0,
-    rotation: 0,
+    radiusX: 4,
+    radiusY: 2.5,
     depth: 3,
     height3D: 3,
-    solid3DType: 'flat',
-    radiusX: 4,
-    radiusY: 2.5
+    solid3DType: 'flat'
   },
-  sphere: {
-    id: 'sphere',
-    name: 'Sphere',
-    is3DOnly: true,
-    visible: false,
-    color: '#0284c7',
-    fillColor: 'rgba(2, 132, 199, 0.25)',
-    strokeColor: '#0369a1',
-    x: 0,
-    y: 0,
-    y3D: 0,
-    z: 0,
-    rotation: 0,
-    radius: 2.5
+  point: {
+    type: 'point',
+    name: 'Point',
+    category: '2d',
+    color: '#3b82f6',
+    fillColor: 'rgba(59, 130, 246, 0.85)',
+    strokeColor: '#1d4ed8',
+    radius: 0.35,
+    depth: 0.35,
+    height3D: 0.35,
+    solid3DType: 'flat'
   },
-  pyramid: {
-    id: 'pyramid',
-    name: 'Pyramid',
+  segment: {
+    type: 'segment',
+    name: 'Line Segment',
+    category: '2d',
+    color: '#6366f1',
+    fillColor: 'rgba(99, 102, 241, 0.22)',
+    strokeColor: '#6366f1',
+    length: 6,
+    depth: 0.3,
+    height3D: 0.3,
+    solid3DType: 'flat'
+  },
+  line: {
+    type: 'line',
+    name: 'Line',
+    category: '2d',
+    color: '#10b981',
+    fillColor: 'rgba(16, 185, 129, 0.22)',
+    strokeColor: '#10b981',
+    length: 12,
+    depth: 0.3,
+    height3D: 0.3,
+    solid3DType: 'flat'
+  },
+  ray: {
+    type: 'ray',
+    name: 'Ray',
+    category: '2d',
+    color: '#f97316',
+    fillColor: 'rgba(249, 115, 22, 0.22)',
+    strokeColor: '#f97316',
+    length: 7,
+    depth: 0.3,
+    height3D: 0.3,
+    solid3DType: 'flat'
+  },
+  angle: {
+    type: 'angle',
+    name: 'Angle',
+    category: '2d',
+    color: '#84cc16',
+    fillColor: 'rgba(132, 204, 22, 0.22)',
+    strokeColor: '#84cc16',
+    deg: 45,
+    armLength: 5,
+    depth: 0.3,
+    height3D: 0.3,
+    solid3DType: 'flat'
+  },
+
+  // --- 3D SHAPES ---
+  cube: {
+    type: 'cube',
+    name: 'Cube',
+    category: '3d',
     is3DOnly: true,
-    visible: false,
-    color: '#d97706',
-    fillColor: 'rgba(217, 119, 6, 0.25)',
-    strokeColor: '#b45309',
-    x: 0,
-    y: 0,
-    y3D: 0,
-    z: 0,
-    rotation: 0,
-    baseSize: 4,
+    color: '#2563eb',
+    fillColor: 'rgba(37, 99, 235, 0.25)',
+    strokeColor: '#1d4ed8',
+    side: 3.5
+  },
+  cuboid: {
+    type: 'cuboid',
+    name: 'Rectangular Prism',
+    category: '3d',
+    is3DOnly: true,
+    color: '#059669',
+    fillColor: 'rgba(5, 150, 105, 0.25)',
+    strokeColor: '#047857',
+    width: 4.5,
+    height: 3,
+    depth: 3.5
+  },
+  triangular_prism: {
+    type: 'triangular_prism',
+    name: 'Triangular Prism',
+    category: '3d',
+    is3DOnly: true,
+    color: '#ea580c',
+    fillColor: 'rgba(234, 88, 12, 0.25)',
+    strokeColor: '#c2410c',
+    side: 4,
     height: 4
   },
-  cone: {
-    id: 'cone',
-    name: 'Cone',
+  cylinder: {
+    type: 'cylinder',
+    name: 'Cylinder',
+    category: '3d',
     is3DOnly: true,
-    visible: false,
+    color: '#0891b2',
+    fillColor: 'rgba(8, 145, 178, 0.25)',
+    strokeColor: '#0e7490',
+    radius: 2.2,
+    height: 4.2
+  },
+  cone: {
+    type: 'cone',
+    name: 'Cone',
+    category: '3d',
+    is3DOnly: true,
     color: '#16a34a',
     fillColor: 'rgba(22, 163, 74, 0.25)',
     strokeColor: '#15803d',
-    x: 0,
-    y: 0,
-    y3D: 0,
-    z: 0,
-    rotation: 0,
     radius: 2.5,
     height: 4
   },
-  torus: {
-    id: 'torus',
-    name: 'Torus / Donut',
+  sphere: {
+    type: 'sphere',
+    name: 'Sphere',
+    category: '3d',
     is3DOnly: true,
-    visible: false,
+    color: '#0284c7',
+    fillColor: 'rgba(2, 132, 199, 0.25)',
+    strokeColor: '#0369a1',
+    radius: 2.5
+  },
+  pyramid: {
+    type: 'pyramid',
+    name: 'Square Pyramid',
+    category: '3d',
+    is3DOnly: true,
+    color: '#d97706',
+    fillColor: 'rgba(217, 119, 6, 0.25)',
+    strokeColor: '#b45309',
+    baseSize: 4,
+    height: 4
+  },
+  tetrahedron: {
+    type: 'tetrahedron',
+    name: 'Tetrahedron',
+    category: '3d',
+    is3DOnly: true,
+    color: '#ec4899',
+    fillColor: 'rgba(236, 72, 153, 0.25)',
+    strokeColor: '#db2777',
+    radius: 2.8
+  },
+  torus: {
+    type: 'torus',
+    name: 'Torus',
+    category: '3d',
+    is3DOnly: true,
     color: '#8b5cf6',
     fillColor: 'rgba(139, 92, 246, 0.25)',
     strokeColor: '#7c3aed',
+    radius: 3,
+    tube: 0.9
+  }
+};
+
+const SHAPE_LIBRARY_ITEMS = [
+  // 2D Shapes
+  { type: 'square', name: 'Square', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><rect x="3" y="3" width="14" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
+  { type: 'rectangle', name: 'Rectangle', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><rect x="2" y="4.5" width="16" height="11" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
+  { type: 'circle', name: 'Circle', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
+  { type: 'triangle', name: 'Triangle', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><polygon points="10,2.5 18,17.5 2,17.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
+  { type: 'right_triangle', name: 'Right Triangle', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><polygon points="3,3 3,17 17,17" fill="none" stroke="currentColor" stroke-width="2"/><path d="M 3 12 L 8 12 L 8 17" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>' },
+  { type: 'equilateral_triangle', name: 'Equilateral', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><polygon points="10,2.5 18,17.5 2,17.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="11.5" r="1.5" fill="currentColor"/></svg>' },
+  { type: 'isosceles_triangle', name: 'Isosceles', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><polygon points="10,2 16,18 4,18" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
+  { type: 'parallelogram', name: 'Parallelogram', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><polygon points="6,4 18,4 14,16 2,16" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
+  { type: 'rhombus', name: 'Rhombus', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><polygon points="10,2 18,10 10,18 2,10" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
+  { type: 'trapezoid', name: 'Trapezoid', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><polygon points="5,4.5 15,4.5 18,16.5 2,16.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
+  { type: 'kite', name: 'Kite', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><polygon points="10,2 17,7.5 10,18 3,7.5" fill="none" stroke="currentColor" stroke-width="2"/><line x1="3" y1="7.5" x2="17" y2="7.5" stroke="currentColor" stroke-width="1.2" stroke-dasharray="1.5 1.5"/><line x1="10" y1="2" x2="10" y2="18" stroke="currentColor" stroke-width="1.2" stroke-dasharray="1.5 1.5"/></svg>' },
+  { type: 'pentagon', name: 'Pentagon', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><polygon points="10,2 18,8 15,17 5,17 2,8" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
+  { type: 'hexagon', name: 'Hexagon', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><polygon points="10,2 17,6 17,14 10,18 3,14 3,6" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
+  { type: 'regular_polygon', name: 'Octagon', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><polygon points="6,2 14,2 18,6 18,14 14,18 6,18 2,14 2,6" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
+  { type: 'semicircle', name: 'Semicircle', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><path d="M 2 13 A 8 8 0 0 1 18 13 Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
+  { type: 'ellipse', name: 'Ellipse', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><ellipse cx="10" cy="10" rx="8" ry="5" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
+  { type: 'point', name: 'Point', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><circle cx="10" cy="10" r="3.5" fill="currentColor"/></svg>' },
+  { type: 'segment', name: 'Segment', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="2"/><circle cx="3" cy="10" r="2.2" fill="currentColor"/><circle cx="17" cy="10" r="2.2" fill="currentColor"/></svg>' },
+  { type: 'line', name: 'Line', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><line x1="2" y1="10" x2="18" y2="10" stroke="currentColor" stroke-width="2"/><polygon points="2,10 6,7 6,13" fill="currentColor"/><polygon points="18,10 14,7 14,13" fill="currentColor"/></svg>' },
+  { type: 'ray', name: 'Ray', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="2"/><circle cx="3" cy="10" r="2.2" fill="currentColor"/><polygon points="18,10 14,7 14,13" fill="currentColor"/></svg>' },
+  { type: 'angle', name: 'Angle', category: '2d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><path d="M 17 15 L 4 15 L 14 5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M 9 15 A 5 5 0 0 0 7.5 11.5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>' },
+
+  // 3D Shapes
+  { type: 'cube', name: 'Cube', category: '3d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><path d="M10 2 L17 6 L17 14 L10 18 L3 14 L3 6 Z M10 2 L10 18 M3 6 L10 10 L17 6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>' },
+  { type: 'cuboid', name: 'Cuboid / Prism', category: '3d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><path d="M11 2 L18 5 L18 13 L11 16 L2 13 L2 5 Z M11 2 L11 16 M2 5 L11 9 L18 5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>' },
+  { type: 'triangular_prism', name: 'Tri Prism', category: '3d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><polygon points="3,16 15,16 9,8" fill="none" stroke="currentColor" stroke-width="1.5"/><polygon points="7,11 19,11 13,3" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="3" y1="16" x2="7" y2="11" stroke="currentColor" stroke-width="1.3"/><line x1="15" y1="16" x2="19" y2="11" stroke="currentColor" stroke-width="1.3"/><line x1="9" y1="8" x2="13" y2="3" stroke="currentColor" stroke-width="1.3"/></svg>' },
+  { type: 'cylinder', name: 'Cylinder', category: '3d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><ellipse cx="10" cy="5" rx="6" ry="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 5 v10 c0 1.4 2.7 2.5 6 2.5 s6 -1.1 6 -2.5 v-10" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>' },
+  { type: 'cone', name: 'Cone', category: '3d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><path d="M10 2 L4 14.5 c0 1.4 2.7 2.5 6 2.5 s6 -1.1 6 -2.5 Z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>' },
+  { type: 'sphere', name: 'Sphere', category: '3d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.6"/><ellipse cx="10" cy="10" rx="7.5" ry="3" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 2"/></svg>' },
+  { type: 'pyramid', name: 'Pyramid', category: '3d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><path d="M10 2 L2 15 L12 18 L18 13 Z M10 2 L12 18" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>' },
+  { type: 'tetrahedron', name: 'Tetrahedron', category: '3d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><path d="M10 2 L2 16 L18 16 Z M10 2 L10 16 M10 16 L13 9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>' },
+  { type: 'torus', name: 'Torus', category: '3d', svg: '<svg viewBox="0 0 20 20" width="16" height="16"><ellipse cx="10" cy="10" rx="7.5" ry="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><ellipse cx="10" cy="10" rx="3.5" ry="2" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>' }
+];
+
+const INSTANCE_PALETTES = [
+  '#2563eb', // Blue
+  '#059669', // Emerald
+  '#dc2626', // Red
+  '#ea580c', // Orange
+  '#9333ea', // Purple
+  '#0d9488', // Teal
+  '#db2777', // Pink
+  '#0284c7', // Sky
+  '#d97706', // Amber
+  '#16a34a', // Green
+  '#8b5cf6', // Violet
+  '#4f46e5'  // Indigo
+];
+
+function hexToRgba(hex, alpha) {
+  let c = hex.replace('#', '');
+  if (c.length === 3) {
+    c = c.split('').map(x => x + x).join('');
+  }
+  const num = parseInt(c, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function getShapeColorForInstance(type, instanceIndex) {
+  const template = SHAPE_TEMPLATES[type];
+  if (!template) return '#2563eb';
+  if (instanceIndex === 0) return template.color;
+  const typeIndex = Object.keys(SHAPE_TEMPLATES).indexOf(type);
+  const colorIndex = (Math.max(0, typeIndex) + instanceIndex * 3) % INSTANCE_PALETTES.length;
+  return INSTANCE_PALETTES[colorIndex];
+}
+
+function getShapeType(shape) {
+  if (!shape) return '';
+  return shape.type || (typeof shape.id === 'string' ? shape.id.replace(/_\d+$/, '') : '');
+}
+
+let shapeCounter = 1;
+
+// Active shape instances dictionary
+const SHAPES = {
+  square_1: {
+    ...SHAPE_TEMPLATES.square,
+    id: 'square_1',
+    type: 'square',
+    name: 'Square 1',
+    visible: true,
     x: 0,
     y: 0,
     y3D: 0,
     z: 0,
-    rotation: 0,
-    radius: 3,
-    tube: 1
+    rotation: 0
   }
 };
 
 // Render order array (last item is drawn on top)
-let renderOrder = ['ellipse', 'hexagon', 'pentagon', 'triangle', 'circle', 'rectangle', 'square', 'sphere', 'pyramid', 'cone', 'torus'];
+let renderOrder = ['square_1'];
 
-// Active shape ID for Dimensions & Properties panels
-let activeShapeId = 'square';
+// Active shape ID for Dimensions & Properties panels - default null so no gizmos are shown initially
+let activeShapeId = null;
 
 // 2D / 3D Mode & Extrusion State
 let currentViewMode = '2d'; // '2d' | '3d'
@@ -379,26 +655,191 @@ const gridState = {
   shapeDragOffsetMathY: 0
 };
 
-// DOM References
+// DOM References & Interactive State
 let canvas = null;
 let ctx = null;
+let geometryInitialized = false;
 
-// --- Initialize App ---
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
+// Shape Library Search & Category state
+let currentLibCategory = 'all';
+let currentLibSearch = '';
+
+// 3D Height Dragging state
+let is3DHeightDragging = false;
+let threeHeightDragStartH = 3;
+let threeHeightDragStartY = 0;
+
+// 3D Gizmo Dragging state
+let isGizmoTranslating = false;
+let gizmoDragAxis = null;
+let gizmoDragDir = 1;
+let gizmoDragStartPos = { x: 0, y: 0, z: 0 };
+let gizmoPointerStart = { x: 0, y: 0 };
+let gizmoDraggedShape = null;
+let isPointerDownOn3DBackground = false;
+let pointerDown3DScreen = { x: 0, y: 0 };
+
+// --- Visual Appearance Theme System (Dark Mode / Light Mode) ---
+let currentTheme = 'dark';
+try {
+  const saved = localStorage.getItem('mathlab_theme');
+  if (saved === 'light' || saved === 'dark') {
+    currentTheme = saved;
+  }
+} catch (e) {}
+
+let threeSceneAmbientLight = null;
+let threeSceneDirLight = null;
+let threeSceneSecondaryLight = null;
+
+function initThemeSystem() {
+  try {
+    const saved = localStorage.getItem('mathlab_theme');
+    if (saved === 'light' || saved === 'dark') {
+      currentTheme = saved;
+    }
+  } catch (e) {}
+
+  applyTheme(currentTheme, false);
+
+  const navDarkBtn = document.getElementById('btnNavThemeDark');
+  const navLightBtn = document.getElementById('btnNavThemeLight');
+  const geoDarkBtn = document.getElementById('btnGeoThemeDark');
+  const geoLightBtn = document.getElementById('btnGeoThemeLight');
+
+  if (navDarkBtn) {
+    navDarkBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      applyTheme('dark', true);
+    });
+  }
+  if (navLightBtn) {
+    navLightBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      applyTheme('light', true);
+    });
+  }
+  if (geoDarkBtn) {
+    geoDarkBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      applyTheme('dark', true);
+    });
+  }
+  if (geoLightBtn) {
+    geoLightBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      applyTheme('light', true);
+    });
+  }
+}
+
+function applyTheme(theme, save = true) {
+  currentTheme = theme === 'light' ? 'light' : 'dark';
+  if (save) {
+    try {
+      localStorage.setItem('mathlab_theme', currentTheme);
+    } catch (e) {}
+  }
+
+  const isDark = currentTheme === 'dark';
+  document.body.classList.toggle('theme-dark', isDark);
+  document.body.classList.toggle('theme-light', !isDark);
+
+  const navDarkBtn = document.getElementById('btnNavThemeDark');
+  const navLightBtn = document.getElementById('btnNavThemeLight');
+  const geoDarkBtn = document.getElementById('btnGeoThemeDark');
+  const geoLightBtn = document.getElementById('btnGeoThemeLight');
+
+  if (navDarkBtn) navDarkBtn.classList.toggle('active', isDark);
+  if (navLightBtn) navLightBtn.classList.toggle('active', !isDark);
+  if (geoDarkBtn) geoDarkBtn.classList.toggle('active', isDark);
+  if (geoLightBtn) geoLightBtn.classList.toggle('active', !isDark);
+
+  // If 3D scene exists, dynamically update background, lighting & materials
+  if (threeScene) {
+    threeScene.background = new THREE.Color(isDark ? 0x090d16 : 0xf1f5f9);
+    if (threeSceneAmbientLight) {
+      threeSceneAmbientLight.color.setHex(isDark ? 0xdbeafe : 0xffffff);
+      threeSceneAmbientLight.intensity = isDark ? 0.65 : 0.85;
+    }
+    if (threeSceneSecondaryLight) {
+      threeSceneSecondaryLight.color.setHex(isDark ? 0x38bdf8 : 0xffffff);
+      threeSceneSecondaryLight.intensity = isDark ? 0.45 : 0.25;
+    }
+    numberSpriteCache.clear();
+    updateDynamicThreeGrid(true);
+    rebuildThreeShapes();
+  }
+
+  // If 2D canvas is active, re-render with active theme
+  if (ctx && canvas && currentViewMode === '2d') {
+    render();
+  }
+}
+
+// --- Startup Error Reporting (Visual error overlay on crash) ---
+function showStartupError(error) {
+  const message = error instanceof Error
+    ? `${error.name}: ${error.message}\n${error.stack || ''}`
+    : String(error);
+
+  let panel = document.getElementById('mathLabStartupErrorPanel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'mathLabStartupErrorPanel';
+    panel.style.cssText = `
+      position: fixed;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      z-index: 999999;
+      padding: 16px;
+      background: #fff1f2;
+      border: 2px solid #ef4444;
+      border-radius: 10px;
+      color: #991b1b;
+      font-family: monospace;
+      white-space: pre-wrap;
+    `;
+    document.body.appendChild(panel);
+  }
+  panel.textContent = 'MathLab startup error:\n\n' + message;
+}
+
+window.addEventListener('error', (event) => {
+  if (event.error) {
+    console.error('[MathLab global error]', event.error);
+    showStartupError(event.error);
+  }
+});
+
+// Lazy geometry initialization guard - only initialize when entering Geometry
+function ensureGeometryInitialized() {
+  if (geometryInitialized) return;
+  geometryInitialized = true;
+
+  try {
+    initCanvas();
+    initPanAndZoomEvents();
+    initShapeSelectorPanel();
+    initGridControls();
+    initViewModeToggle();
+    renderAllPanels();
+    render();
+  } catch (error) {
+    console.error('[MathLab geometry init error]', error);
+    showStartupError(error);
+  }
 }
 
 function initApp() {
-  initCanvas();
-  initPanAndZoomEvents();
-  initShapeSelectorPanel();
-  initGridControls();
-  initViewModeToggle();
-  initHashRouting();
-  renderAllPanels();
-  render();
+  try {
+    initThemeSystem();
+    initHashRouting();
+  } catch (error) {
+    console.error('[MathLab startup error]', error);
+    showStartupError(error);
+  }
 }
 
 // --- Coordinate Conversions ---
@@ -423,19 +864,20 @@ function getShapeHalfExtents(shape) {
   let halfH = 20;
   if (!shape) return { halfW, halfH };
 
-  if (shape.id === 'square') {
+  const type = getShapeType(shape);
+  if (type === 'square') {
     halfW = (shape.side * gridState.scale) / 2 + 6;
     halfH = halfW;
-  } else if (shape.id === 'rectangle') {
+  } else if (type === 'rectangle') {
     halfW = (shape.width * gridState.scale) / 2 + 6;
     halfH = (shape.length * gridState.scale) / 2 + 6;
-  } else if (shape.id === 'circle') {
+  } else if (type === 'circle') {
     halfW = (shape.radius * gridState.scale) + 6;
     halfH = halfW;
-  } else if (shape.id === 'ellipse') {
+  } else if (type === 'ellipse') {
     halfW = (shape.radiusX * gridState.scale) + 6;
     halfH = (shape.radiusY * gridState.scale) + 6;
-  } else if (shape.id === 'triangle') {
+  } else if (type === 'triangle') {
     const verts = getTriangleVertices(shape);
     let maxDX = 0;
     let maxDY = 0;
@@ -445,11 +887,11 @@ function getShapeHalfExtents(shape) {
     });
     halfW = Math.max(20, maxDX * gridState.scale + 6);
     halfH = Math.max(20, maxDY * gridState.scale + 6);
-  } else if (shape.id === 'pentagon') {
+  } else if (type === 'pentagon') {
     const R = (shape.side / (2 * Math.sin(Math.PI / 5))) * gridState.scale;
     halfW = R + 6;
     halfH = R + 6;
-  } else if (shape.id === 'hexagon') {
+  } else if (type === 'hexagon') {
     const R = shape.side * gridState.scale;
     halfW = R + 6;
     halfH = R + 6;
@@ -518,7 +960,7 @@ function applyShapeResize(shape, screenX, screenY) {
   const currDist = Math.max(1, Math.hypot(localX, localY));
   const ratio = currDist / initDist;
 
-  switch (shape.id) {
+  switch (getShapeType(shape)) {
     case 'square': {
       let newSide = shape.side;
       if (hId === 'e' || hId === 'w') {
@@ -604,18 +1046,37 @@ function getRotationHandleScreenCoords(shape) {
 
 function getShapeBoundingRadius(shape) {
   if (!shape) return 2.0;
-  switch (shape.id) {
+  switch (getShapeType(shape)) {
     case 'square': return (shape.side * Math.SQRT2) / 2;
     case 'rectangle': return Math.hypot(shape.width, shape.length) / 2;
     case 'circle': return shape.radius;
+    case 'semicircle': return shape.radius;
     case 'ellipse': return Math.max(shape.radiusX, shape.radiusY);
     case 'triangle': return Math.max(shape.sideA, shape.sideB, shape.sideC) / 1.5;
+    case 'right_triangle': return Math.hypot(shape.base || 4, shape.height || 3) / 1.5;
+    case 'equilateral_triangle': return (shape.side || 4) / Math.sqrt(3);
+    case 'isosceles_triangle': return Math.max(shape.base || 4, shape.leg || 5) / 1.5;
+    case 'parallelogram': return Math.hypot((shape.base || 5) + (shape.skew || 1.5), shape.height || 3) / 2;
+    case 'rhombus': return Math.max(shape.diag1 || 5, shape.diag2 || 3.5) / 2;
+    case 'trapezoid': return Math.hypot(shape.bottomBase || 5, shape.height || 3) / 2;
+    case 'kite': return Math.max(shape.diagX || 4, (shape.topH || 2) + (shape.bottomH || 3.5)) / 2;
     case 'pentagon': return shape.side * 0.85;
     case 'hexagon': return shape.side;
-    case 'sphere': return shape.radius;
-    case 'pyramid': return Math.max(shape.baseSize / 1.4, shape.height);
-    case 'cone': return Math.max(shape.radius, shape.height);
-    case 'torus': return shape.radius + shape.tube;
+    case 'regular_polygon': return (shape.side || 2.2) / (2 * Math.sin(Math.PI / (shape.sides || 8)));
+    case 'point': return 0.8;
+    case 'segment':
+    case 'line':
+    case 'ray': return (shape.length || 6) / 2;
+    case 'angle': return shape.armLength || 5;
+    case 'cube': return ((shape.side || 3.5) * Math.SQRT2) / 2;
+    case 'cuboid': return Math.hypot(shape.width || 4.5, shape.depth || 3.5) / 2;
+    case 'triangular_prism': return (shape.side || 4) / Math.sqrt(3);
+    case 'cylinder': return Math.hypot(shape.radius || 2.2, (shape.height || 4.2) / 2);
+    case 'sphere': return shape.radius || 2.5;
+    case 'pyramid': return Math.max((shape.baseSize || 4) / 1.4, shape.height || 4);
+    case 'cone': return Math.max(shape.radius || 2.5, shape.height || 4);
+    case 'tetrahedron': return shape.radius || 2.8;
+    case 'torus': return (shape.radius || 3) + (shape.tube || 0.9);
     default: return 2.5;
   }
 }
@@ -838,6 +1299,15 @@ function initPanAndZoomEvents() {
       if (canvas) canvas.classList.remove('rotating-shape');
     }
     if (gridState.isPanning) {
+      const dx = gridState.originX - gridState.initialOriginX;
+      const dy = gridState.originY - gridState.initialOriginY;
+      if (Math.hypot(dx, dy) < 4) {
+        if (activeShapeId !== null) {
+          setActiveShape(null);
+          render();
+          renderAllPanels();
+        }
+      }
       gridState.isPanning = false;
       if (canvas) canvas.classList.remove('panning');
     }
@@ -974,56 +1444,275 @@ function updateCoordsReadout(mx, my) {
   }
 }
 
-// --- Shape Selector Panel Controls (Top-Left) ---
-function initShapeSelectorPanel() {
-  const shapeIds = Object.keys(SHAPES);
-  shapeIds.forEach((id) => {
-    const checkbox = document.getElementById(`check_${id}`);
-    const itemLabel = document.getElementById(`shapeItem_${id}`);
+// --- Shape Selector Panel & Multi-Instance Shape Management ---
+function addShapeInstance(type, options = {}) {
+  const template = SHAPE_TEMPLATES[type];
+  if (!template) return null;
 
-    if (checkbox) {
-      checkbox.checked = SHAPES[id].visible;
-      checkbox.addEventListener('change', (e) => {
-        const isChecked = e.target.checked;
-        SHAPES[id].visible = isChecked;
+  shapeCounter++;
+  const id = `${type}_${shapeCounter}`;
+  const sameTypeCount = Object.values(SHAPES).filter(s => getShapeType(s) === type).length;
+  const instanceNum = sameTypeCount + 1;
+  const name = `${template.name} ${instanceNum}`;
 
-        if (isChecked) {
-          // When a checkbox is ticked, shape appears at center (0,0)
-          SHAPES[id].x = 0;
-          SHAPES[id].y = 0;
-          bringShapeToFront(id);
-          setActiveShape(id);
-        } else {
-          // If the unchecked shape was active, pick another visible shape
-          if (activeShapeId === id) {
-            const nextVisible = renderOrder.slice().reverse().find(sid => {
-              if (currentViewMode === '2d' && SHAPES[sid].is3DOnly) return false;
-              return SHAPES[sid].visible;
-            });
-            setActiveShape(nextVisible || null);
-          }
+  const color = getShapeColorForInstance(type, sameTypeCount);
+  const fillColor = hexToRgba(color, 0.22);
+  const strokeColor = color;
+
+  const totalShapes = Object.keys(SHAPES).length;
+  const offset = totalShapes > 0 ? ((totalShapes % 6) * 1.5) : 0;
+
+  const newShape = {
+    ...template,
+    id,
+    type,
+    name,
+    visible: true,
+    color,
+    fillColor,
+    strokeColor,
+    x: options.x !== undefined ? options.x : offset,
+    y: options.y !== undefined ? options.y : -offset,
+    y3D: options.y3D !== undefined ? options.y3D : 0,
+    z: options.z !== undefined ? options.z : offset,
+    rotation: options.rotation !== undefined ? options.rotation : 0,
+    depth: options.depth !== undefined ? options.depth : 3,
+    height3D: options.height3D !== undefined ? options.height3D : 3,
+    solid3DType: options.solid3DType !== undefined ? options.solid3DType : 'flat',
+    ...options
+  };
+
+  SHAPES[id] = newShape;
+  renderOrder.push(id);
+  setActiveShape(id);
+  updateShapeSelectorUI();
+  if (currentViewMode === '3d') {
+    rebuildThreeShapes();
+  } else {
+    render();
+  }
+  return newShape;
+}
+
+function removeShapeInstance(shapeId) {
+  if (!SHAPES[shapeId]) return;
+  delete SHAPES[shapeId];
+
+  const idx = renderOrder.indexOf(shapeId);
+  if (idx !== -1) {
+    renderOrder.splice(idx, 1);
+  }
+
+  if (activeShapeId === shapeId) {
+    setActiveShape(null);
+  }
+
+  updateShapeSelectorUI();
+  if (currentViewMode === '3d') {
+    rebuildThreeShapes();
+  } else {
+    render();
+  }
+}
+
+function updateShapeSelectorUI() {
+  const listEl = document.getElementById('shapeSelectorList');
+  if (!listEl) return;
+
+  const countBadge = document.getElementById('graphCountIndicator');
+  const visibleShapes = Object.values(SHAPES).filter(s => {
+    if (currentViewMode === '2d' && s.is3DOnly) return false;
+    return true;
+  });
+  if (countBadge) {
+    countBadge.textContent = `${visibleShapes.length} ${visibleShapes.length === 1 ? 'shape' : 'shapes'}`;
+  }
+  updateShapeCountBadge();
+
+  const shapeIds = renderOrder.filter(id => !!SHAPES[id]);
+
+  if (shapeIds.length === 0) {
+    listEl.innerHTML = '<div class="no-shapes-msg">No shapes on graph.<br>Click a shape in the library above to add.</div>';
+    return;
+  }
+
+  listEl.innerHTML = '';
+
+  shapeIds.slice().reverse().forEach(id => {
+    const shape = SHAPES[id];
+    if (currentViewMode === '2d' && shape.is3DOnly) return;
+
+    const item = document.createElement('div');
+    item.className = `floating-shape-item ${id === activeShapeId ? 'active-selected' : ''}`;
+    item.id = `shapeItem_${id}`;
+    item.setAttribute('data-id', id);
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'shape-checkbox-input';
+    checkbox.id = `check_${id}`;
+    checkbox.checked = !!shape.visible;
+    checkbox.setAttribute('aria-label', `Toggle ${shape.name}`);
+
+    checkbox.addEventListener('change', (e) => {
+      e.stopPropagation();
+      shape.visible = checkbox.checked;
+      if (shape.visible) {
+        bringShapeToFront(id);
+        setActiveShape(id);
+      } else {
+        if (activeShapeId === id) {
+          setActiveShape(null);
         }
-        updateShapeCountBadge();
-        renderAllPanels();
+      }
+      if (currentViewMode === '3d') {
+        rebuildThreeShapes();
+      } else {
         render();
-      });
+      }
+      renderAllPanels();
+    });
+
+    const dot = document.createElement('span');
+    dot.className = 'shape-color-indicator';
+    dot.style.backgroundColor = shape.color;
+
+    const label = document.createElement('span');
+    label.className = 'shape-item-label';
+    label.textContent = shape.name;
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'shape-delete-btn';
+    delBtn.title = `Delete ${shape.name}`;
+    delBtn.setAttribute('aria-label', `Delete ${shape.name}`);
+    delBtn.innerHTML = '&times;';
+
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeShapeInstance(id);
+    });
+
+    item.addEventListener('click', (e) => {
+      if (e.target !== checkbox && e.target !== delBtn) {
+        if (!shape.visible) {
+          shape.visible = true;
+          checkbox.checked = true;
+        }
+        bringShapeToFront(id);
+        setActiveShape(id);
+        if (currentViewMode === '3d') {
+          rebuildThreeShapes();
+        } else {
+          render();
+        }
+        renderAllPanels();
+      }
+    });
+
+    item.appendChild(checkbox);
+    item.appendChild(dot);
+    item.appendChild(label);
+    item.appendChild(delBtn);
+
+    listEl.appendChild(item);
+  });
+}
+
+function initShapeLibrary() {
+  const container = document.getElementById('shapeLibraryGrid');
+  const tabs = document.querySelectorAll('.category-tab');
+  const searchInput = document.getElementById('shapeSearchInput');
+
+  function renderLibrary() {
+    if (!container) return;
+    container.innerHTML = '';
+
+    const q = currentLibSearch.trim().toLowerCase();
+    const filtered = SHAPE_LIBRARY_ITEMS.filter(item => {
+      const matchCat = currentLibCategory === 'all' || item.category === currentLibCategory;
+      const matchSearch = !q || item.name.toLowerCase().includes(q) || item.type.toLowerCase().includes(q);
+      return matchCat && matchSearch;
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="no-shapes-msg">No shapes match your search.</div>';
+      return;
     }
 
-    if (itemLabel) {
-      itemLabel.addEventListener('click', (e) => {
-        // If clicking label outside the checkbox, select it as active
-        if (e.target !== checkbox) {
-          if (SHAPES[id].visible) {
-            setActiveShape(id);
-            renderAllPanels();
-            render();
-          }
-        }
-      });
+    if (currentLibCategory === 'all' && !q) {
+      // Group visually into 2D and 3D
+      const items2D = filtered.filter(i => i.category === '2d');
+      const items3D = filtered.filter(i => i.category === '3d');
+
+      if (items2D.length > 0) {
+        const group2D = document.createElement('div');
+        group2D.className = 'shape-lib-group';
+        group2D.innerHTML = '<div class="shape-lib-group-title">2D Plane Shapes</div>';
+        const grid2D = document.createElement('div');
+        grid2D.className = 'shape-lib-group-items';
+        items2D.forEach(item => grid2D.appendChild(createLibButton(item)));
+        group2D.appendChild(grid2D);
+        container.appendChild(group2D);
+      }
+
+      if (items3D.length > 0) {
+        const group3D = document.createElement('div');
+        group3D.className = 'shape-lib-group';
+        group3D.innerHTML = '<div class="shape-lib-group-title">3D Solid Shapes</div>';
+        const grid3D = document.createElement('div');
+        grid3D.className = 'shape-lib-group-items';
+        items3D.forEach(item => grid3D.appendChild(createLibButton(item)));
+        group3D.appendChild(grid3D);
+        container.appendChild(group3D);
+      }
+    } else {
+      const grid = document.createElement('div');
+      grid.className = 'shape-lib-group-items';
+      filtered.forEach(item => grid.appendChild(createLibButton(item)));
+      container.appendChild(grid);
     }
+  }
+
+  function createLibButton(item) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-lib-shape';
+    btn.setAttribute('data-type', item.type);
+    btn.title = `Add new ${item.name} to graph`;
+    btn.innerHTML = `
+      <span class="lib-shape-icon" aria-hidden="true">${item.svg}</span>
+      <span class="lib-shape-name">${item.name}</span>
+    `;
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      addShapeInstance(item.type);
+    });
+    return btn;
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentLibCategory = tab.getAttribute('data-category') || 'all';
+      renderLibrary();
+    });
   });
 
-  updateShapeCountBadge();
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      currentLibSearch = e.target.value || '';
+      renderLibrary();
+    });
+  }
+
+  renderLibrary();
+}
+
+function initShapeSelectorPanel() {
+  initShapeLibrary();
+  updateShapeSelectorUI();
 }
 
 function updateShapeCountBadge() {
@@ -1048,16 +1737,18 @@ function setActiveShape(shapeId) {
   activeShapeId = shapeId;
 
   // Highlight active shape in selector
-  Object.keys(SHAPES).forEach(id => {
-    const item = document.getElementById(`shapeItem_${id}`);
-    if (item) {
+  const listEl = document.getElementById('shapeSelectorList');
+  if (listEl) {
+    const items = listEl.querySelectorAll('.floating-shape-item');
+    items.forEach(item => {
+      const id = item.getAttribute('data-id');
       if (id === activeShapeId) {
         item.classList.add('active-selected');
       } else {
         item.classList.remove('active-selected');
       }
-    }
-  });
+    });
+  }
 
   renderAllPanels();
 }
@@ -1291,9 +1982,10 @@ function initThreeScene() {
     disposeThreeScene();
   }
 
-  // 1. Scene setup with light gray viewport background
+  // 1. Scene setup with theme viewport background
+  const isDark = currentTheme === 'dark';
   threeScene = new THREE.Scene();
-  threeScene.background = new THREE.Color(0xf0f2f5);
+  threeScene.background = new THREE.Color(isDark ? 0x090d16 : 0xf1f5f9);
 
   // 2. Camera setup
   const aspect = window.innerWidth / window.innerHeight;
@@ -1318,20 +2010,20 @@ function initThreeScene() {
   threeControls.maxDistance = 600;
   threeControls.update();
 
-  // 5. Lighting: Soft ambient + directional light
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
-  threeScene.add(ambientLight);
+  // 5. Lighting: Ambient + directional + subtle mathematical rim light
+  threeSceneAmbientLight = new THREE.AmbientLight(isDark ? 0xdbeafe : 0xffffff, isDark ? 0.65 : 0.85);
+  threeScene.add(threeSceneAmbientLight);
 
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.95);
-  dirLight.position.set(16, 26, 20);
-  dirLight.castShadow = true;
-  dirLight.shadow.mapSize.width = 2048;
-  dirLight.shadow.mapSize.height = 2048;
-  threeScene.add(dirLight);
+  threeSceneDirLight = new THREE.DirectionalLight(0xffffff, 0.95);
+  threeSceneDirLight.position.set(16, 26, 20);
+  threeSceneDirLight.castShadow = true;
+  threeSceneDirLight.shadow.mapSize.width = 2048;
+  threeSceneDirLight.shadow.mapSize.height = 2048;
+  threeScene.add(threeSceneDirLight);
 
-  const secondaryLight = new THREE.DirectionalLight(0xffffff, 0.25);
-  secondaryLight.position.set(-16, -10, -16);
-  threeScene.add(secondaryLight);
+  threeSceneSecondaryLight = new THREE.DirectionalLight(isDark ? 0x38bdf8 : 0xffffff, isDark ? 0.45 : 0.25);
+  threeSceneSecondaryLight.position.set(-16, -10, -16);
+  threeScene.add(threeSceneSecondaryLight);
 
   // 6. Dynamic Infinite 3D Floor Grid on X-Z plane at Y=0
   threeDynamicGridGroup = new THREE.Group();
@@ -1376,7 +2068,8 @@ function threeAnimate() {
 }
 
 function getCachedNumberSprite(num, colorHex) {
-  const key = `${num}_${colorHex}`;
+  const isDark = currentTheme === 'dark';
+  const key = `${num}_${colorHex}_${currentTheme}`;
   let texture = numberSpriteCache.get(key);
   if (!texture) {
     const canvas = document.createElement('canvas');
@@ -1389,14 +2082,14 @@ function getCachedNumberSprite(num, colorHex) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // White outline halo for high contrast against any geometry or grid line
+    // High contrast outline halo against any geometry or grid line
     ctx.lineWidth = 7;
     ctx.lineJoin = 'round';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.strokeStyle = isDark ? 'rgba(9, 13, 22, 0.95)' : 'rgba(255, 255, 255, 0.95)';
     ctx.strokeText(String(num), 128, 64);
 
     // Colored text fill
-    ctx.fillStyle = colorHex || '#475569';
+    ctx.fillStyle = colorHex || (isDark ? '#e2e8f0' : '#475569');
     ctx.fillText(String(num), 128, 64);
 
     texture = new THREE.CanvasTexture(canvas);
@@ -1520,15 +2213,24 @@ function updateDynamicThreeGrid(force = false) {
     }
   }
 
+  const isDark = currentTheme === 'dark';
   if (minorPoints.length > 0) {
     const minorGeom = new THREE.BufferGeometry().setFromPoints(minorPoints);
-    const minorMat = new THREE.LineBasicMaterial({ color: 0xcbd5e1, transparent: true, opacity: 0.5 });
+    const minorMat = new THREE.LineBasicMaterial({
+      color: isDark ? 0x1e293b : 0xcbd5e1,
+      transparent: true,
+      opacity: isDark ? 0.65 : 0.5
+    });
     threeDynamicGridGroup.add(new THREE.LineSegments(minorGeom, minorMat));
   }
 
   if (majorPoints.length > 0) {
     const majorGeom = new THREE.BufferGeometry().setFromPoints(majorPoints);
-    const majorMat = new THREE.LineBasicMaterial({ color: 0x64748b, transparent: true, opacity: 0.85 });
+    const majorMat = new THREE.LineBasicMaterial({
+      color: isDark ? 0x334155 : 0x64748b,
+      transparent: true,
+      opacity: isDark ? 0.95 : 0.85
+    });
     threeDynamicGridGroup.add(new THREE.LineSegments(majorGeom, majorMat));
   }
 
@@ -1796,13 +2498,19 @@ function createAxisLabelSprite(label, colorHex) {
 }
 
 function createShapeLabelSprite(text, isHighlighted) {
+  const isDark = currentTheme === 'dark';
   const canvas = document.createElement('canvas');
   canvas.width = 256;
   canvas.height = 72;
   const ctx = canvas.getContext('2d');
 
   // Background rounded pill
-  ctx.fillStyle = isHighlighted ? 'rgba(37, 99, 235, 0.95)' : 'rgba(15, 23, 42, 0.78)';
+  if (isHighlighted) {
+    ctx.fillStyle = isDark ? 'rgba(2, 132, 199, 0.95)' : 'rgba(37, 99, 235, 0.95)';
+  } else {
+    ctx.fillStyle = isDark ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.92)';
+  }
+
   const r = 16;
   const x = 6, y = 6, w = 244, h = 60;
   ctx.beginPath();
@@ -1814,11 +2522,11 @@ function createShapeLabelSprite(text, isHighlighted) {
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = isHighlighted ? '#ffffff' : 'rgba(255, 255, 255, 0.25)';
+  ctx.strokeStyle = isHighlighted ? (isDark ? '#00f0ff' : '#ffffff') : (isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(203, 213, 225, 0.9)');
   ctx.lineWidth = 2.5;
   ctx.stroke();
 
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = isHighlighted ? '#ffffff' : (isDark ? '#e2e8f0' : '#1e293b');
   ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -1831,10 +2539,6 @@ function createShapeLabelSprite(text, isHighlighted) {
   sprite.scale.set(3.4, 0.95, 1);
   return sprite;
 }
-
-let is3DHeightDragging = false;
-let threeHeightDragStartH = 3;
-let threeHeightDragStartY = 0;
 
 function createRectangularPyramidGeometry(width, length, height) {
   const geom = new THREE.BufferGeometry();
@@ -1955,6 +2659,7 @@ function getShape3DBoundsAnalytical(shape) {
   const posY = shape.y3D || 0;
   const is2D = !shape.is3DOnly;
   const solidType = is2D ? (shape.solid3DType || 'flat') : 'solid';
+  const shapeType = getShapeType(shape);
 
   let localMinX = -1.5, localMaxX = 1.5;
   let localMinZ = -1.5, localMaxZ = 1.5;
@@ -1972,11 +2677,41 @@ function getShape3DBoundsAnalytical(shape) {
     localMaxY = r * 2;
   } else {
     // 3D-only native solids
-    switch (shape.id) {
+    switch (shapeType) {
       case 'sphere': {
         const r = Math.max(0.1, shape.radius || 2);
         localMinY = 0;
         localMaxY = r * 2;
+        break;
+      }
+      case 'cube': {
+        const s = Math.max(0.1, shape.side || 3.5);
+        localMinY = 0;
+        localMaxY = s;
+        break;
+      }
+      case 'cuboid': {
+        const h = Math.max(0.1, shape.height || 3);
+        localMinY = 0;
+        localMaxY = h;
+        break;
+      }
+      case 'triangular_prism': {
+        const h = Math.max(0.1, shape.height || 4);
+        localMinY = 0;
+        localMaxY = h;
+        break;
+      }
+      case 'cylinder': {
+        const h = Math.max(0.1, shape.height || 4.2);
+        localMinY = 0;
+        localMaxY = h;
+        break;
+      }
+      case 'tetrahedron': {
+        const r = Math.max(0.1, shape.radius || 2.8);
+        localMinY = 0;
+        localMaxY = r * 1.6;
         break;
       }
       case 'pyramid': {
@@ -2003,11 +2738,43 @@ function getShape3DBoundsAnalytical(shape) {
   }
 
   // Base X and Z dimensions
-  switch (shape.id) {
+  switch (shapeType) {
     case 'square': {
       const s = (shape.side || 4) / 2;
       localMinX = -s; localMaxX = s;
       localMinZ = -s; localMaxZ = s;
+      break;
+    }
+    case 'cube': {
+      const s = (shape.side || 3.5) / 2;
+      localMinX = -s; localMaxX = s;
+      localMinZ = -s; localMaxZ = s;
+      break;
+    }
+    case 'cuboid': {
+      const w = (shape.width || 4.5) / 2;
+      const d = (shape.depth || 3.5) / 2;
+      localMinX = -w; localMaxX = w;
+      localMinZ = -d; localMaxZ = d;
+      break;
+    }
+    case 'triangular_prism': {
+      const s = shape.side || 4;
+      const r = s / Math.sqrt(3);
+      localMinX = -r; localMaxX = r;
+      localMinZ = -r; localMaxZ = r;
+      break;
+    }
+    case 'cylinder': {
+      const r = shape.radius || 2.2;
+      localMinX = -r; localMaxX = r;
+      localMinZ = -r; localMaxZ = r;
+      break;
+    }
+    case 'tetrahedron': {
+      const r = shape.radius || 2.8;
+      localMinX = -r; localMaxX = r;
+      localMinZ = -r; localMaxZ = r;
       break;
     }
     case 'rectangle': {
@@ -2023,11 +2790,58 @@ function getShape3DBoundsAnalytical(shape) {
       localMinZ = -r; localMaxZ = r;
       break;
     }
+    case 'semicircle': {
+      const r = shape.radius || 3;
+      localMinX = -r; localMaxX = r;
+      localMinZ = 0; localMaxZ = r;
+      break;
+    }
     case 'ellipse': {
       const rx = shape.radiusX || 3;
       const ry = shape.radiusY || 2;
       localMinX = -rx; localMaxX = rx;
       localMinZ = -ry; localMaxZ = ry;
+      break;
+    }
+    case 'right_triangle':
+    case 'equilateral_triangle':
+    case 'isosceles_triangle':
+    case 'parallelogram':
+    case 'rhombus':
+    case 'trapezoid':
+    case 'kite':
+    case 'regular_polygon': {
+      try {
+        const verts = get2DShapePolygonVertices({ ...shape, x: 0, y: 0 });
+        if (verts && verts.length > 0) {
+          const xs = verts.map(v => v.x);
+          const zs = verts.map(v => -v.y);
+          localMinX = Math.min(...xs); localMaxX = Math.max(...xs);
+          localMinZ = Math.min(...zs); localMaxZ = Math.max(...zs);
+        }
+      } catch (e) {
+        localMinX = -2; localMaxX = 2;
+        localMinZ = -2; localMaxZ = 2;
+      }
+      break;
+    }
+    case 'point': {
+      localMinX = -0.5; localMaxX = 0.5;
+      localMinZ = -0.5; localMaxZ = 0.5;
+      break;
+    }
+    case 'segment':
+    case 'line':
+    case 'ray': {
+      const len = (shape.length || 6) / 2;
+      localMinX = -len; localMaxX = len;
+      localMinZ = -0.5; localMaxZ = 0.5;
+      break;
+    }
+    case 'angle': {
+      const arm = shape.armLength || 5;
+      localMinX = -0.5; localMaxX = arm;
+      localMinZ = -arm; localMaxZ = 0.5;
       break;
     }
     case 'triangle': {
@@ -2194,13 +3008,6 @@ function buildTranslationGizmo(shape) {
   return gizmoRoot;
 }
 
-let isGizmoTranslating = false;
-let gizmoDragAxis = null;
-let gizmoDragDir = 1;
-let gizmoDragStartPos = { x: 0, y: 0, z: 0 };
-let gizmoPointerStart = { x: 0, y: 0 };
-let gizmoDraggedShape = null;
-
 function initThreeInteraction() {
   if (!threeRenderer) return;
 
@@ -2211,6 +3018,9 @@ function initThreeInteraction() {
     threeMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     threePointerDownPos.x = e.clientX;
     threePointerDownPos.y = e.clientY;
+    pointerDown3DScreen.x = e.clientX;
+    pointerDown3DScreen.y = e.clientY;
+    isPointerDownOn3DBackground = false;
 
     threeRaycaster.setFromCamera(threeMouse, threeCamera);
     const intersects = threeRaycaster.intersectObjects(threeShapeGroup.children, true);
@@ -2272,7 +3082,7 @@ function initThreeInteraction() {
         } else if (isHeightHandle) {
           is3DHeightDragging = true;
           dragged3DShape = shape;
-          threeHeightDragStartH = shape.height3D !== undefined ? shape.height3D : (shape.depth !== undefined ? shape.depth : 3);
+          threeHeightDragStartH = shape.height !== undefined ? shape.height : (shape.height3D !== undefined ? shape.height3D : (shape.depth !== undefined ? shape.depth : 3));
           threeHeightDragStartY = e.clientY;
         } else if (isGizmo || e.shiftKey) {
           is3DRotating = true;
@@ -2308,6 +3118,7 @@ function initThreeInteraction() {
     }
 
     // Clicked background: camera OrbitControls handles it
+    isPointerDownOn3DBackground = true;
     if (threeControls) threeControls.enabled = true;
   });
 
@@ -2351,6 +3162,9 @@ function initThreeInteraction() {
     } else if (is3DHeightDragging && dragged3DShape) {
       const dy = threeHeightDragStartY - e.clientY;
       const newH = Math.max(0.1, Math.round((threeHeightDragStartH + dy * 0.04) * 10) / 10);
+      if (dragged3DShape.height !== undefined) {
+        dragged3DShape.height = newH;
+      }
       dragged3DShape.height3D = newH;
       dragged3DShape.depth = newH;
       rebuildThreeShapes();
@@ -2458,6 +3272,19 @@ function initThreeInteraction() {
       rebuildThreeShapes();
       renderAllPanels();
     }
+
+    if (isPointerDownOn3DBackground) {
+      const dist = Math.hypot(e.clientX - pointerDown3DScreen.x, e.clientY - pointerDown3DScreen.y);
+      if (dist < 5) {
+        // Clicked empty space in 3D: deselect shape and immediately hide all gizmos!
+        if (activeShapeId !== null) {
+          setActiveShape(null);
+          rebuildThreeShapes();
+          renderAllPanels();
+        }
+      }
+      isPointerDownOn3DBackground = false;
+    }
   });
 }
 
@@ -2475,6 +3302,7 @@ function rebuildThreeShapes() {
     if (!shape.visible) return;
 
     const isActive = shape.id === activeShapeId;
+    const shapeType = getShapeType(shape);
     let geom = null;
     const is2DShape = !shape.is3DOnly;
     const solidType = is2DShape ? (shape.solid3DType || 'flat') : 'solid';
@@ -2488,7 +3316,7 @@ function rebuildThreeShapes() {
       displayName = `${shape.name} (Base)`;
       labelY = 0.85;
 
-      switch (shape.id) {
+      switch (shapeType) {
         case 'square': {
           const s = shape.side;
           const sq = new THREE.Shape();
@@ -2581,11 +3409,66 @@ function rebuildThreeShapes() {
           geom.translate(0, 0.02, 0);
           break;
         }
+        case 'semicircle': {
+          const r = Math.max(0.1, shape.radius || 3);
+          const semi = new THREE.Shape();
+          semi.absarc(0, 0, r, 0, Math.PI, false);
+          semi.closePath();
+          geom = new THREE.ShapeGeometry(semi, 48);
+          geom.rotateX(-Math.PI / 2);
+          geom.translate(0, 0.02, 0);
+          break;
+        }
+        case 'point': {
+          const r = Math.max(0.2, (shape.radius || 0.35) * 0.9);
+          geom = new THREE.SphereGeometry(r, 20, 20);
+          geom.translate(0, r, 0);
+          labelY = r * 2 + 0.6;
+          break;
+        }
+        case 'segment':
+        case 'line':
+        case 'ray': {
+          const len = shape.length || 6;
+          geom = new THREE.CylinderGeometry(0.08, 0.08, len, 16);
+          geom.rotateZ(Math.PI / 2);
+          geom.translate(0, 0.04, 0);
+          break;
+        }
+        case 'angle': {
+          const arm = shape.armLength || 5;
+          const arm1 = new THREE.CylinderGeometry(0.08, 0.08, arm, 16);
+          arm1.rotateZ(Math.PI / 2);
+          arm1.translate(arm / 2, 0.04, 0);
+          geom = arm1;
+          break;
+        }
+        case 'right_triangle':
+        case 'equilateral_triangle':
+        case 'isosceles_triangle':
+        case 'parallelogram':
+        case 'rhombus':
+        case 'trapezoid':
+        case 'kite':
+        case 'regular_polygon': {
+          const verts = get2DShapePolygonVertices({ ...shape, x: 0, y: 0 });
+          if (verts && verts.length >= 3) {
+            const poly = new THREE.Shape();
+            poly.moveTo(verts[0].x, verts[0].y);
+            for (let i = 1; i < verts.length; i++) poly.lineTo(verts[i].x, verts[i].y);
+            poly.closePath();
+            geom = new THREE.ShapeGeometry(poly);
+            geom.rotateX(-Math.PI / 2);
+            geom.translate(0, 0.02, 0);
+            cornerVerts = verts.map(v => ({ x: v.x, z: -v.y }));
+          }
+          break;
+        }
       }
     } else if (is2DShape && solidType === 'extrude') {
       // Extruded Prism or Cylinder
       labelY = solidHeight + 0.9;
-      switch (shape.id) {
+      switch (shapeType) {
         case 'square': {
           const s = shape.side;
           geom = new THREE.BoxGeometry(s, solidHeight, s);
@@ -2656,7 +3539,7 @@ function rebuildThreeShapes() {
     } else if (is2DShape && solidType === 'pyramid') {
       // Pyramid or Cone constructed from 2D base
       labelY = solidHeight + 0.9;
-      switch (shape.id) {
+      switch (shapeType) {
         case 'square': {
           const s = shape.side;
           geom = new THREE.ConeGeometry(s / Math.SQRT2, solidHeight, 4);
@@ -2712,7 +3595,57 @@ function rebuildThreeShapes() {
       displayName = 'Sphere';
     } else {
       // Native 3D-only shapes
-      switch (shape.id) {
+      switch (shapeType) {
+        case 'cube': {
+          const s = Math.max(0.1, shape.side || 3.5);
+          geom = new THREE.BoxGeometry(s, s, s);
+          geom.translate(0, s / 2, 0);
+          labelY = s + 0.9;
+          displayName = 'Cube';
+          break;
+        }
+        case 'cuboid': {
+          const w = Math.max(0.1, shape.width || 4.5);
+          const h = Math.max(0.1, shape.height || 3);
+          const d = Math.max(0.1, shape.depth || 3.5);
+          geom = new THREE.BoxGeometry(w, h, d);
+          geom.translate(0, h / 2, 0);
+          labelY = h + 0.9;
+          displayName = 'Cuboid';
+          break;
+        }
+        case 'triangular_prism': {
+          const s = Math.max(0.1, shape.side || 4);
+          const h = Math.max(0.1, shape.height || 4);
+          const triVerts = getEquilateralTriangleVertices({ x: 0, y: 0, side: s });
+          const triShape = new THREE.Shape();
+          triShape.moveTo(triVerts[0].x, triVerts[0].y);
+          triShape.lineTo(triVerts[1].x, triVerts[1].y);
+          triShape.lineTo(triVerts[2].x, triVerts[2].y);
+          triShape.closePath();
+          geom = new THREE.ExtrudeGeometry(triShape, { depth: h, bevelEnabled: false });
+          geom.rotateX(-Math.PI / 2);
+          labelY = h + 0.9;
+          displayName = 'Tri Prism';
+          break;
+        }
+        case 'cylinder': {
+          const r = Math.max(0.1, shape.radius || 2.2);
+          const h = Math.max(0.1, shape.height || 4.2);
+          geom = new THREE.CylinderGeometry(r, r, h, 48);
+          geom.translate(0, h / 2, 0);
+          labelY = h + 0.9;
+          displayName = 'Cylinder';
+          break;
+        }
+        case 'tetrahedron': {
+          const r = Math.max(0.1, shape.radius || 2.8);
+          geom = new THREE.TetrahedronGeometry(r);
+          geom.translate(0, r * 0.8, 0);
+          labelY = r * 1.6 + 0.9;
+          displayName = 'Tetrahedron';
+          break;
+        }
         case 'sphere': {
           const r = Math.max(0.1, shape.radius);
           geom = new THREE.SphereGeometry(r, 36, 24);
@@ -2756,19 +3689,30 @@ function rebuildThreeShapes() {
     if (!geom) return;
 
     // Semi-transparent material with active emissive glow
+    const isDark = currentTheme === 'dark';
     const isFlat = is2DShape && solidType === 'flat';
+
+    let meshColor = shape.color;
+    if (isDark) {
+      if (meshColor === '#2563eb') meshColor = '#0284c7';
+      else if (meshColor === '#059669') meshColor = '#10b981';
+      else if (meshColor === '#ea580c' || meshColor === '#d97706') meshColor = '#f59e0b';
+      else if (meshColor === '#dc2626' || meshColor === '#e11d48') meshColor = '#f43f5e';
+      else if (meshColor === '#9333ea' || meshColor === '#8b5cf6') meshColor = '#a855f7';
+    }
+
     const mat = new THREE.MeshStandardMaterial({
-      color: shape.color,
+      color: meshColor,
       transparent: true,
-      opacity: isActive ? (isFlat ? 0.78 : 0.88) : (isFlat ? 0.55 : 0.65),
-      roughness: isFlat ? 0.4 : 0.25,
-      metalness: isFlat ? 0.05 : 0.12,
+      opacity: isActive ? (isFlat ? 0.82 : 0.90) : (isFlat ? 0.60 : 0.70),
+      roughness: isFlat ? 0.35 : 0.20,
+      metalness: isFlat ? 0.08 : 0.22,
       side: THREE.DoubleSide
     });
 
     if (isActive) {
-      mat.emissive = new THREE.Color(0x2563eb);
-      mat.emissiveIntensity = isFlat ? 0.2 : 0.28;
+      mat.emissive = new THREE.Color(isDark ? 0x00f0ff : 0x2563eb);
+      mat.emissiveIntensity = isFlat ? 0.25 : 0.35;
     }
 
     const mesh = new THREE.Mesh(geom, mat);
@@ -2783,11 +3727,12 @@ function rebuildThreeShapes() {
 
     // Edges geometry highlight line
     const edgesGeom = new THREE.EdgesGeometry(geom, isFlat ? 10 : 22);
+    const edgeColor = isActive ? (isDark ? 0x00f0ff : 0x2563eb) : (shape.strokeColor || shape.color);
     const edgeMat = new THREE.LineBasicMaterial({
-      color: isActive ? 0x2563eb : (shape.strokeColor || shape.color),
+      color: edgeColor,
       linewidth: isActive ? 3 : 1.5,
       transparent: true,
-      opacity: isActive ? 1.0 : 0.8
+      opacity: isActive ? 1.0 : (isDark ? 0.85 : 0.75)
     });
     const edgeLine = new THREE.LineSegments(edgesGeom, edgeMat);
     mesh.add(edgeLine);
@@ -2796,7 +3741,7 @@ function rebuildThreeShapes() {
     if (isFlat && cornerVerts) {
       const vGeom = new THREE.SphereGeometry(0.11, 16, 16);
       const vMat = new THREE.MeshStandardMaterial({
-        color: isActive ? 0x2563eb : 0x64748b,
+        color: isActive ? (isDark ? 0x00f0ff : 0x2563eb) : (isDark ? 0x64748b : 0x94a3b8),
         roughness: 0.3,
         metalness: 0.4
       });
@@ -2812,50 +3757,55 @@ function rebuildThreeShapes() {
     labelSprite.position.set(0, labelY, 0);
     mesh.add(labelSprite);
 
-    // If active and an extruded solid or pyramid, add interactive height handle at top
-    if (isActive && (solidType === 'extrude' || solidType === 'pyramid')) {
-      const handleGeom = new THREE.SphereGeometry(0.2, 16, 16);
+    // If active and has vertical height, add interactive height handle at top
+    const bounds = getShape3DBoundsAnalytical(shape);
+    const topY = bounds.localMaxY;
+    const canAdjustHeight = (is2DShape && (solidType === 'extrude' || solidType === 'pyramid')) ||
+      (!is2DShape && (shapeType === 'pyramid' || shapeType === 'cone' || shapeType === 'cylinder' || shapeType === 'cuboid' || shapeType === 'triangular_prism'));
+
+    if (isActive && canAdjustHeight && topY > 0.2) {
+      const handleGeom = new THREE.SphereGeometry(0.18, 16, 16);
       const handleMat = new THREE.MeshStandardMaterial({
-        color: 0x2563eb,
-        emissive: 0x1d4ed8,
-        emissiveIntensity: 0.5,
+        color: isDark ? 0x00f0ff : 0x2563eb,
+        emissive: isDark ? 0x0284c7 : 0x1d4ed8,
+        emissiveIntensity: 0.6,
         roughness: 0.2,
         metalness: 0.8
       });
       const handleMesh = new THREE.Mesh(handleGeom, handleMat);
-      handleMesh.position.set(0, solidHeight + 0.12, 0);
+      handleMesh.position.set(0, topY + 0.16, 0);
       handleMesh.userData = { isHeightHandle: true, shapeId: shape.id };
 
       const stemGeom = new THREE.CylinderGeometry(0.025, 0.025, 0.22, 8);
-      const stemMat = new THREE.MeshBasicMaterial({ color: 0x2563eb });
+      const stemMat = new THREE.MeshBasicMaterial({ color: isDark ? 0x00f0ff : 0x2563eb });
       const stemMesh = new THREE.Mesh(stemGeom, stemMat);
-      stemMesh.position.set(0, solidHeight, 0);
+      stemMesh.position.set(0, topY + 0.06, 0);
       stemMesh.userData = { isHeightHandle: true, shapeId: shape.id };
 
       mesh.add(stemMesh);
       mesh.add(handleMesh);
     }
 
-    // If active, add 3D rotation gizmo around the shape
+    // If active, add 3D rotation gizmo around the shape (subtle, clean, proportional)
     if (isActive) {
-      const shapeR = Math.max(1.8, getShapeBoundingRadius(shape) + 0.6);
-      const gizmoGeom = new THREE.TorusGeometry(shapeR, 0.07, 16, 64);
+      const shapeR = Math.max(1.15, getShapeBoundingRadius(shape) + 0.18);
+      const gizmoGeom = new THREE.TorusGeometry(shapeR, 0.03, 16, 64);
       gizmoGeom.rotateX(Math.PI / 2);
-      gizmoGeom.translate(0, 0.05, 0);
+      gizmoGeom.translate(0, 0.04, 0);
 
       const gizmoMat = new THREE.MeshBasicMaterial({
-        color: 0x2563eb,
+        color: 0x3b82f6,
         transparent: true,
-        opacity: 0.92
+        opacity: 0.45
       });
       const gizmoMesh = new THREE.Mesh(gizmoGeom, gizmoMat);
       gizmoMesh.userData = { isRotationGizmo: true, shapeId: shape.id };
 
-      const handleGeom = new THREE.SphereGeometry(0.2, 16, 16);
-      const handleMat = new THREE.MeshBasicMaterial({ color: 0x60a5fa });
+      const handleGeom = new THREE.SphereGeometry(0.08, 16, 16);
+      const handleMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.75 });
       [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].forEach(a => {
         const h = new THREE.Mesh(handleGeom, handleMat);
-        h.position.set(shapeR * Math.cos(a), 0.05, shapeR * Math.sin(a));
+        h.position.set(shapeR * Math.cos(a), 0.04, shapeR * Math.sin(a));
         h.userData = { isRotationGizmo: true, shapeId: shape.id };
         gizmoMesh.add(h);
       });
@@ -2938,6 +3888,116 @@ function getShapeAtMathCoords(mx, my) {
   return null;
 }
 
+function getRightTriangleVertices(shape) {
+  const b = shape.base || 4;
+  const h = shape.height || 3;
+  const cx = shape.x || 0;
+  const cy = shape.y || 0;
+  return [
+    { x: cx - b / 3, y: cy - h / 3 },
+    { x: cx + (2 * b) / 3, y: cy - h / 3 },
+    { x: cx - b / 3, y: cy + (2 * h) / 3 }
+  ];
+}
+
+function getEquilateralTriangleVertices(shape) {
+  const s = shape.side || 4;
+  const h = (s * Math.sqrt(3)) / 2;
+  const cx = shape.x || 0;
+  const cy = shape.y || 0;
+  return [
+    { x: cx, y: cy + (2 * h) / 3 },
+    { x: cx - s / 2, y: cy - h / 3 },
+    { x: cx + s / 2, y: cy - h / 3 }
+  ];
+}
+
+function getIsoscelesTriangleVertices(shape) {
+  const b = shape.base || 4;
+  const leg = shape.leg || 5;
+  const h = Math.sqrt(Math.max(0.1, leg * leg - (b * b) / 4));
+  const cx = shape.x || 0;
+  const cy = shape.y || 0;
+  return [
+    { x: cx, y: cy + (2 * h) / 3 },
+    { x: cx - b / 2, y: cy - h / 3 },
+    { x: cx + b / 2, y: cy - h / 3 }
+  ];
+}
+
+function getParallelogramVertices(shape) {
+  const b = shape.base || 5;
+  const h = shape.height || 3;
+  const s = shape.skew !== undefined ? shape.skew : 1.5;
+  const cx = shape.x || 0;
+  const cy = shape.y || 0;
+  return [
+    { x: cx - b / 2 - s / 2, y: cy - h / 2 },
+    { x: cx + b / 2 - s / 2, y: cy - h / 2 },
+    { x: cx + b / 2 + s / 2, y: cy + h / 2 },
+    { x: cx - b / 2 + s / 2, y: cy + h / 2 }
+  ];
+}
+
+function getRhombusVertices(shape) {
+  const d1 = shape.diag1 || 5;
+  const d2 = shape.diag2 || 3.5;
+  const cx = shape.x || 0;
+  const cy = shape.y || 0;
+  return [
+    { x: cx, y: cy - d2 / 2 },
+    { x: cx + d1 / 2, y: cy },
+    { x: cx, y: cy + d2 / 2 },
+    { x: cx - d1 / 2, y: cy }
+  ];
+}
+
+function getTrapezoidVertices(shape) {
+  const a = shape.topBase || 3;
+  const b = shape.bottomBase || 5;
+  const h = shape.height || 3;
+  const cx = shape.x || 0;
+  const cy = shape.y || 0;
+  return [
+    { x: cx - a / 2, y: cy + h / 2 },
+    { x: cx + a / 2, y: cy + h / 2 },
+    { x: cx + b / 2, y: cy - h / 2 },
+    { x: cx - b / 2, y: cy - h / 2 }
+  ];
+}
+
+function getKiteVertices(shape) {
+  const w = shape.diagX || 4;
+  const top = shape.topH || 2;
+  const bot = shape.bottomH || 3.5;
+  const cx = shape.x || 0;
+  const cy = shape.y || 0;
+  return [
+    { x: cx, y: cy + top },
+    { x: cx + w / 2, y: cy },
+    { x: cx, y: cy - bot },
+    { x: cx - w / 2, y: cy }
+  ];
+}
+
+function get2DShapePolygonVertices(shape) {
+  const type = getShapeType(shape);
+  switch (type) {
+    case 'triangle': return getTriangleVertices(shape);
+    case 'right_triangle': return getRightTriangleVertices(shape);
+    case 'equilateral_triangle': return getEquilateralTriangleVertices(shape);
+    case 'isosceles_triangle': return getIsoscelesTriangleVertices(shape);
+    case 'parallelogram': return getParallelogramVertices(shape);
+    case 'rhombus': return getRhombusVertices(shape);
+    case 'trapezoid': return getTrapezoidVertices(shape);
+    case 'kite': return getKiteVertices(shape);
+    case 'pentagon': return getRegularPolygonVertices(shape.x || 0, shape.y || 0, 5, shape.side || 3);
+    case 'hexagon': return getRegularPolygonVertices(shape.x || 0, shape.y || 0, 6, shape.side || 3);
+    case 'regular_polygon': return getRegularPolygonVertices(shape.x || 0, shape.y || 0, shape.sides || 8, shape.side || 2.2);
+    default: return null;
+  }
+}
+
 function isPointInsideShape(shape, mx, my) {
   let dx = mx - shape.x;
   let dy = my - shape.y;
@@ -2953,8 +4013,14 @@ function isPointInsideShape(shape, mx, my) {
   }
   const localMx = shape.x + dx;
   const localMy = shape.y + dy;
+  const shapeType = getShapeType(shape);
 
-  switch (shape.id) {
+  const polyVerts = get2DShapePolygonVertices(shape);
+  if (polyVerts) {
+    return isPointInPolygon(localMx, localMy, polyVerts);
+  }
+
+  switch (shapeType) {
     case 'square': {
       const half = shape.side / 2;
       return Math.abs(dx) <= half && Math.abs(dy) <= half;
@@ -2967,22 +4033,53 @@ function isPointInsideShape(shape, mx, my) {
     case 'circle': {
       return Math.hypot(dx, dy) <= shape.radius;
     }
+    case 'semicircle': {
+      return Math.hypot(dx, dy) <= (shape.radius || 3) && dy >= 0;
+    }
     case 'ellipse': {
       const rx = Math.max(0.01, shape.radiusX);
       const ry = Math.max(0.01, shape.radiusY);
       return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1;
     }
-    case 'triangle': {
-      const verts = getTriangleVertices(shape);
+    case 'point': {
+      return Math.hypot(dx, dy) <= Math.max(0.6, (shape.radius || 0.35) * 1.5);
+    }
+    case 'segment':
+    case 'line':
+    case 'ray': {
+      const len = shape.length || 6;
+      return Math.abs(dx) <= len / 2 && Math.abs(dy) <= 0.6;
+    }
+    case 'angle': {
+      return Math.hypot(dx, dy) <= (shape.armLength || 5) && (Math.abs(dy) <= 0.6 || Math.abs(dx) <= (shape.armLength || 5));
+    }
+    case 'cube': {
+      const half = (shape.side || 3.5) / 2;
+      return Math.abs(dx) <= half && Math.abs(dy) <= half;
+    }
+    case 'cuboid': {
+      const halfW = (shape.width || 4.5) / 2;
+      const halfD = (shape.depth || 3.5) / 2;
+      return Math.abs(dx) <= halfW && Math.abs(dy) <= halfD;
+    }
+    case 'triangular_prism': {
+      const verts = getEquilateralTriangleVertices({ ...shape, side: shape.side || 4 });
       return isPointInPolygon(localMx, localMy, verts);
     }
-    case 'pentagon': {
-      const verts = getRegularPolygonVertices(shape.x, shape.y, 5, shape.side);
-      return isPointInPolygon(localMx, localMy, verts);
+    case 'cylinder':
+    case 'sphere':
+    case 'cone': {
+      return Math.hypot(dx, dy) <= (shape.radius || 2.5);
     }
-    case 'hexagon': {
-      const verts = getRegularPolygonVertices(shape.x, shape.y, 6, shape.side);
-      return isPointInPolygon(localMx, localMy, verts);
+    case 'pyramid': {
+      const half = (shape.baseSize || 4) / 2;
+      return Math.abs(dx) <= half && Math.abs(dy) <= half;
+    }
+    case 'tetrahedron': {
+      return Math.hypot(dx, dy) <= (shape.radius || 2.8);
+    }
+    case 'torus': {
+      return Math.hypot(dx, dy) <= (shape.radius || 3) + (shape.tube || 0.9);
     }
     default:
       return false;
@@ -3082,10 +4179,16 @@ function render() {
 
 // Draw Desmos-style Grid Lines, Axis Lines & Tick Labels
 function drawInfiniteGrid(width, height) {
+  const isDark = currentTheme === 'dark';
   const xMin = toMathX(0);
   const xMax = toMathX(width);
   const yMin = toMathY(height);
   const yMax = toMathY(0);
+
+  // Background clear/fill to ensure no white flash or bleed
+  ctx.save();
+  ctx.fillStyle = isDark ? '#090d16' : '#fafbfc';
+  ctx.fillRect(0, 0, width, height);
 
   // Determine nice grid unit step (1, 2, 5 * 10^k)
   const targetPixels = 80;
@@ -3102,11 +4205,9 @@ function drawInfiniteGrid(width, height) {
   // Subdivisions: 5 minor divisions per major step
   const minorStep = majorStep / 5;
 
-  ctx.save();
-
   // --- Minor Grid Lines ---
   ctx.lineWidth = 1;
-  ctx.strokeStyle = 'rgba(15, 23, 42, 0.06)';
+  ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.045)' : 'rgba(15, 23, 42, 0.06)';
 
   ctx.beginPath();
   const startMinorX = Math.floor(xMin / minorStep) * minorStep;
@@ -3126,7 +4227,7 @@ function drawInfiniteGrid(width, height) {
 
   // --- Major Grid Lines (Darker lines every 5 units / major steps) ---
   ctx.lineWidth = 1.2;
-  ctx.strokeStyle = 'rgba(15, 23, 42, 0.14)';
+  ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 23, 42, 0.14)';
 
   ctx.beginPath();
   const startMajorX = Math.floor(xMin / majorStep) * majorStep;
@@ -3148,8 +4249,8 @@ function drawInfiniteGrid(width, height) {
   const screenOriginX = Math.round(gridState.originX) + 0.5;
   const screenOriginY = Math.round(gridState.originY) + 0.5;
 
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = isDark ? 1.75 : 2;
+  ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : '#334155';
 
   ctx.beginPath();
   // X axis (horizontal line y=0)
@@ -3161,8 +4262,8 @@ function drawInfiniteGrid(width, height) {
   ctx.stroke();
 
   // --- Axis Tick Labels (Desmos-like dynamic numbers) ---
-  ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillStyle = '#64748b';
+  ctx.font = '500 11px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.68)' : '#64748b';
 
   // Determine label position pinning if axes are off screen
   const axisLabelPosY = Math.max(22, Math.min(height - 10, screenOriginY + 16));
@@ -3183,7 +4284,7 @@ function drawInfiniteGrid(width, height) {
       ctx.beginPath();
       ctx.moveTo(sx, screenOriginY - 4);
       ctx.lineTo(sx, screenOriginY + 4);
-      ctx.strokeStyle = '#334155';
+      ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : '#334155';
       ctx.lineWidth = 1.5;
       ctx.stroke();
     }
@@ -3205,7 +4306,7 @@ function drawInfiniteGrid(width, height) {
       ctx.beginPath();
       ctx.moveTo(screenOriginX - 4, sy);
       ctx.lineTo(screenOriginX + 4, sy);
-      ctx.strokeStyle = '#334155';
+      ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : '#334155';
       ctx.lineWidth = 1.5;
       ctx.stroke();
     }
@@ -3248,19 +4349,43 @@ function drawShape(shape, isActive) {
     ctx.translate(-sx, -sy);
   }
 
+  const isDark = currentTheme === 'dark';
+
   // Active shape selection glow/outline
   if (isActive) {
-    ctx.shadowColor = 'rgba(37, 99, 235, 0.55)';
-    ctx.shadowBlur = 14;
+    ctx.shadowColor = isDark ? 'rgba(0, 240, 255, 0.65)' : 'rgba(37, 99, 235, 0.55)';
+    ctx.shadowBlur = isDark ? 18 : 14;
   }
 
-  ctx.fillStyle = shape.fillColor;
-  ctx.strokeStyle = isActive ? '#2563eb' : shape.strokeColor;
+  // Semantic color contrast in dark mode
+  let strokeColor = shape.strokeColor;
+  let fillColor = shape.fillColor;
+  if (isDark) {
+    if (shape.strokeColor === '#2563eb' || shape.color === '#2563eb') {
+      strokeColor = '#38bdf8';
+      fillColor = 'rgba(56, 189, 248, 0.22)';
+    } else if (shape.strokeColor === '#059669' || shape.color === '#059669') {
+      strokeColor = '#34d399';
+      fillColor = 'rgba(52, 211, 153, 0.22)';
+    } else if (shape.strokeColor === '#ea580c' || shape.strokeColor === '#d97706') {
+      strokeColor = '#facc15';
+      fillColor = 'rgba(250, 204, 21, 0.22)';
+    } else if (shape.strokeColor === '#dc2626' || shape.strokeColor === '#e11d48') {
+      strokeColor = '#fb7185';
+      fillColor = 'rgba(251, 113, 133, 0.22)';
+    } else if (shape.strokeColor === '#9333ea' || shape.strokeColor === '#8b5cf6') {
+      strokeColor = '#c084fc';
+      fillColor = 'rgba(192, 132, 252, 0.22)';
+    }
+  }
+
+  ctx.fillStyle = fillColor;
+  ctx.strokeStyle = isActive ? (isDark ? '#00f0ff' : '#2563eb') : strokeColor;
   ctx.lineWidth = isActive ? 2.5 : 2;
 
   let labelText = '';
 
-  switch (shape.id) {
+  switch (getShapeType(shape)) {
     case 'square': {
       const s = shape.side * gridState.scale;
       ctx.beginPath();
@@ -3354,15 +4479,247 @@ function drawShape(shape, isActive) {
       labelText = `Side: ${shape.side}`;
       break;
     }
+    case 'right_triangle':
+    case 'equilateral_triangle':
+    case 'isosceles_triangle':
+    case 'parallelogram':
+    case 'rhombus':
+    case 'trapezoid':
+    case 'kite':
+    case 'regular_polygon': {
+      const verts = get2DShapePolygonVertices(shape);
+      if (verts && verts.length > 0) {
+        ctx.beginPath();
+        for (let i = 0; i < verts.length; i++) {
+          const vx = toScreenX(verts[i].x);
+          const vy = toScreenY(verts[i].y);
+          if (i === 0) ctx.moveTo(vx, vy);
+          else ctx.lineTo(vx, vy);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        const st = getShapeType(shape);
+        if (st === 'right_triangle') {
+          const sqSize = 10;
+          const v0x = toScreenX(verts[0].x);
+          const v0y = toScreenY(verts[0].y);
+          ctx.beginPath();
+          ctx.rect(v0x, v0y - sqSize, sqSize, sqSize);
+          ctx.strokeStyle = shape.strokeColor;
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+          labelText = `${shape.base} × ${shape.height}`;
+        } else if (st === 'rhombus') {
+          labelText = `d₁=${shape.diag1}, d₂=${shape.diag2}`;
+        } else if (st === 'parallelogram') {
+          labelText = `b=${shape.base}, h=${shape.height}`;
+        } else if (st === 'trapezoid') {
+          labelText = `a=${shape.topBase}, b=${shape.bottomBase}, h=${shape.height}`;
+        } else if (st === 'kite') {
+          labelText = `d=${shape.diagX}`;
+        } else if (st === 'equilateral_triangle') {
+          labelText = `s = ${shape.side}`;
+        } else if (st === 'isosceles_triangle') {
+          labelText = `b=${shape.base}, leg=${shape.leg}`;
+        } else if (st === 'regular_polygon') {
+          labelText = `n=${shape.sides || 8}, s=${shape.side}`;
+        }
+      }
+      break;
+    }
+    case 'semicircle': {
+      const r = (shape.radius || 3) * gridState.scale;
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, Math.PI, 0, false);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      labelText = `r = ${shape.radius || 3}`;
+      break;
+    }
+    case 'point': {
+      const r = Math.max(4, (shape.radius || 0.35) * gridState.scale);
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      ctx.fillStyle = isActive ? '#2563eb' : shape.color;
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      labelText = `(${shape.x.toFixed(1)}, ${shape.y.toFixed(1)})`;
+      break;
+    }
+    case 'segment': {
+      const len = (shape.length || 6) * gridState.scale;
+      ctx.beginPath();
+      ctx.moveTo(sx - len / 2, sy);
+      ctx.lineTo(sx + len / 2, sy);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(sx - len / 2, sy, 4, 0, Math.PI * 2);
+      ctx.arc(sx + len / 2, sy, 4, 0, Math.PI * 2);
+      ctx.fillStyle = shape.strokeColor;
+      ctx.fill();
+      labelText = `L = ${shape.length || 6}`;
+      break;
+    }
+    case 'line': {
+      const len = (shape.length || 12) * gridState.scale;
+      ctx.beginPath();
+      ctx.moveTo(sx - len / 2, sy);
+      ctx.lineTo(sx + len / 2, sy);
+      ctx.stroke();
+      const arr = 8;
+      ctx.beginPath();
+      ctx.moveTo(sx - len / 2, sy);
+      ctx.lineTo(sx - len / 2 + arr, sy - arr / 2);
+      ctx.lineTo(sx - len / 2 + arr, sy + arr / 2);
+      ctx.closePath();
+      ctx.moveTo(sx + len / 2, sy);
+      ctx.lineTo(sx + len / 2 - arr, sy - arr / 2);
+      ctx.lineTo(sx + len / 2 - arr, sy + arr / 2);
+      ctx.closePath();
+      ctx.fillStyle = shape.strokeColor;
+      ctx.fill();
+      labelText = `Line`;
+      break;
+    }
+    case 'ray': {
+      const len = (shape.length || 7) * gridState.scale;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(sx + len, sy);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+      ctx.fillStyle = shape.strokeColor;
+      ctx.fill();
+      const arr = 8;
+      ctx.beginPath();
+      ctx.moveTo(sx + len, sy);
+      ctx.lineTo(sx + len - arr, sy - arr / 2);
+      ctx.lineTo(sx + len - arr, sy + arr / 2);
+      ctx.closePath();
+      ctx.fill();
+      labelText = `Ray`;
+      break;
+    }
+    case 'angle': {
+      const len = (shape.armLength || 5) * gridState.scale;
+      const rad = ((shape.deg || 45) * Math.PI) / 180;
+      ctx.beginPath();
+      ctx.moveTo(sx + len, sy);
+      ctx.lineTo(sx, sy);
+      ctx.lineTo(sx + len * Math.cos(-rad), sy + len * Math.sin(-rad));
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(sx, sy, 22, -rad, 0);
+      ctx.strokeStyle = '#2563eb';
+      ctx.stroke();
+      labelText = `${shape.deg || 45}°`;
+      break;
+    }
+    case 'cube': {
+      const s = (shape.side || 3.5) * gridState.scale;
+      ctx.beginPath();
+      ctx.rect(sx - s / 2, sy - s / 2, s, s);
+      ctx.fill();
+      ctx.stroke();
+      labelText = `Cube ${shape.side}³`;
+      break;
+    }
+    case 'cuboid': {
+      const w = (shape.width || 4.5) * gridState.scale;
+      const d = (shape.depth || 3.5) * gridState.scale;
+      ctx.beginPath();
+      ctx.rect(sx - w / 2, sy - d / 2, w, d);
+      ctx.fill();
+      ctx.stroke();
+      labelText = `${shape.width} × ${shape.height} × ${shape.depth}`;
+      break;
+    }
+    case 'triangular_prism': {
+      const verts = getEquilateralTriangleVertices({ ...shape, side: shape.side || 4 });
+      ctx.beginPath();
+      for (let i = 0; i < verts.length; i++) {
+        const vx = toScreenX(verts[i].x);
+        const vy = toScreenY(verts[i].y);
+        if (i === 0) ctx.moveTo(vx, vy);
+        else ctx.lineTo(vx, vy);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      labelText = `Tri Prism`;
+      break;
+    }
+    case 'cylinder': {
+      const r = (shape.radius || 2.2) * gridState.scale;
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      labelText = `Cylinder r=${shape.radius}`;
+      break;
+    }
+    case 'cone': {
+      const r = (shape.radius || 2.5) * gridState.scale;
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      labelText = `Cone r=${shape.radius}`;
+      break;
+    }
+    case 'sphere': {
+      const r = (shape.radius || 2.5) * gridState.scale;
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      labelText = `Sphere r=${shape.radius}`;
+      break;
+    }
+    case 'pyramid': {
+      const s = (shape.baseSize || 4) * gridState.scale;
+      ctx.beginPath();
+      ctx.rect(sx - s / 2, sy - s / 2, s, s);
+      ctx.fill();
+      ctx.stroke();
+      labelText = `Pyramid`;
+      break;
+    }
+    case 'tetrahedron': {
+      const r = (shape.radius || 2.8) * gridState.scale;
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      labelText = `Tetrahedron`;
+      break;
+    }
+    case 'torus': {
+      const R = (shape.radius || 3) * gridState.scale;
+      const r = (shape.tube || 0.9) * gridState.scale;
+      ctx.beginPath();
+      ctx.arc(sx, sy, R + r, 0, Math.PI * 2);
+      ctx.arc(sx, sy, Math.max(2, R - r), 0, Math.PI * 2, true);
+      ctx.fill();
+      ctx.stroke();
+      labelText = `Torus`;
+      break;
+    }
   }
 
   // Draw Center Point Indicator
   ctx.shadowBlur = 0;
   ctx.beginPath();
   ctx.arc(sx, sy, 3.5, 0, Math.PI * 2);
-  ctx.fillStyle = isActive ? '#2563eb' : shape.color;
+  ctx.fillStyle = isActive ? (isDark ? '#00f0ff' : '#2563eb') : (isDark ? '#38bdf8' : shape.color);
   ctx.fill();
-  ctx.strokeStyle = '#ffffff';
+  ctx.strokeStyle = isDark ? '#090d16' : '#ffffff';
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
@@ -3379,33 +4736,55 @@ function drawShape(shape, isActive) {
   ctx.restore();
 }
 
+// Safe rounded rectangle drawing helper (with fallback for browsers without ctx.roundRect)
+function drawRoundedRect(context, x, y, width, height, radius = 6) {
+  if (typeof context.roundRect === 'function') {
+    context.roundRect(x, y, width, height, radius);
+    return;
+  }
+  if (typeof context.quadraticCurveTo !== 'function') {
+    context.rect(x, y, width, height);
+    return;
+  }
+  const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+  context.moveTo(x + r, y);
+  context.lineTo(x + width - r, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + r);
+  context.lineTo(x + width, y + height - r);
+  context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  context.lineTo(x + r, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - r);
+  context.lineTo(x, y + r);
+  context.quadraticCurveTo(x, y, x + r, y);
+}
+
 // Draw centered dimension text tag on shape
 function drawDimensionBadge(x, y, text, themeColor) {
+  const isDark = currentTheme === 'dark';
   ctx.save();
-  ctx.font = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = '600 11px "STIX Two Text", "Plus Jakarta Sans", serif';
   const textWidth = ctx.measureText(text).width;
-  const paddingX = 7;
-  const paddingY = 3.5;
+  const paddingX = 8;
   const badgeWidth = textWidth + paddingX * 2;
-  const badgeHeight = 18;
+  const badgeHeight = 19;
 
   // Background pill
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
-  ctx.strokeStyle = 'rgba(203, 213, 225, 0.9)';
+  ctx.fillStyle = isDark ? 'rgba(15, 23, 42, 0.90)' : 'rgba(255, 255, 255, 0.94)';
+  ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.20)' : 'rgba(203, 213, 225, 0.9)';
   ctx.lineWidth = 1;
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
-  ctx.shadowBlur = 4;
+  ctx.shadowColor = isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.08)';
+  ctx.shadowBlur = isDark ? 6 : 4;
   ctx.shadowOffsetY = 1;
 
   ctx.beginPath();
-  ctx.roundRect(x - badgeWidth / 2, y - badgeHeight / 2, badgeWidth, badgeHeight, 6);
+  drawRoundedRect(ctx, x - badgeWidth / 2, y - badgeHeight / 2, badgeWidth, badgeHeight, 6);
   ctx.fill();
   ctx.stroke();
 
   // Text
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
-  ctx.fillStyle = '#1e293b';
+  ctx.fillStyle = isDark ? '#f8fafc' : '#1e293b';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, x, y);
@@ -3414,8 +4793,9 @@ function drawDimensionBadge(x, y, text, themeColor) {
 
 // Subtle dashed selection boundary, rotation handle, and resize handles for active shape
 function drawActiveSelectionIndicators(shape, sx, sy) {
+  const isDark = currentTheme === 'dark';
   ctx.save();
-  ctx.strokeStyle = '#2563eb';
+  ctx.strokeStyle = isDark ? '#00f0ff' : '#2563eb';
   ctx.lineWidth = 1.5;
   ctx.setLineDash([4, 4]);
 
@@ -3423,7 +4803,7 @@ function drawActiveSelectionIndicators(shape, sx, sy) {
 
   // 1. Dashed bounding box
   ctx.beginPath();
-  ctx.roundRect(sx - halfW, sy - halfH, halfW * 2, halfH * 2, 6);
+  drawRoundedRect(ctx, sx - halfW, sy - halfH, halfW * 2, halfH * 2, 6);
   ctx.stroke();
 
   // 2. Rotation handle stem & handle knob
@@ -3432,23 +4812,23 @@ function drawActiveSelectionIndicators(shape, sx, sy) {
   ctx.setLineDash([]);
   ctx.moveTo(sx, sy - halfH);
   ctx.lineTo(sx, sy - halfH - stem);
-  ctx.strokeStyle = '#2563eb';
+  ctx.strokeStyle = isDark ? '#00f0ff' : '#2563eb';
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
   // Handle circle (rotation)
   ctx.beginPath();
   ctx.arc(sx, sy - halfH - stem, 6, 0, Math.PI * 2);
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = isDark ? '#090d16' : '#ffffff';
   ctx.fill();
-  ctx.strokeStyle = '#2563eb';
+  ctx.strokeStyle = isDark ? '#00f0ff' : '#2563eb';
   ctx.lineWidth = 2;
   ctx.stroke();
 
   // Handle center dot
   ctx.beginPath();
   ctx.arc(sx, sy - halfH - stem, 2, 0, Math.PI * 2);
-  ctx.fillStyle = '#2563eb';
+  ctx.fillStyle = isDark ? '#00f0ff' : '#2563eb';
   ctx.fill();
 
   // 3. Resize handles (8 square handles on corners and edges)
@@ -3461,9 +4841,9 @@ function drawActiveSelectionIndicators(shape, sx, sy) {
     const hy = sy + h.y;
     ctx.beginPath();
     ctx.rect(hx - halfS, hy - halfS, handleSize, handleSize);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = isDark ? '#00f0ff' : '#ffffff';
     ctx.fill();
-    ctx.strokeStyle = '#2563eb';
+    ctx.strokeStyle = isDark ? '#090d16' : '#2563eb';
     ctx.lineWidth = 1.5;
     ctx.stroke();
   });
@@ -3616,6 +4996,7 @@ function renderDimensionsPanel() {
   }
 
   const is3D = currentViewMode === '3d';
+  const shapeType = getShapeType(shape);
 
   if (is3D && !shape.is3DOnly) {
     // Dedicated 3D Construction & Modeling Environment for 2D Base Shapes
@@ -3625,9 +5006,9 @@ function renderDimensionsPanel() {
     const solidType = shape.solid3DType || 'flat';
     let typeTagLabel = 'Flat Base';
     if (solidType === 'extrude') {
-      typeTagLabel = shape.id === 'circle' ? 'Cylinder' : (shape.id === 'square' && Math.abs((shape.height3D || 3) - shape.side) < 1e-4 ? 'Cube' : 'Prism');
+      typeTagLabel = shapeType === 'circle' ? 'Cylinder' : (shapeType === 'square' && Math.abs((shape.height3D || 3) - shape.side) < 1e-4 ? 'Cube' : 'Prism');
     } else if (solidType === 'pyramid') {
-      typeTagLabel = (shape.id === 'circle' || shape.id === 'ellipse') ? 'Cone' : 'Pyramid';
+      typeTagLabel = (shapeType === 'circle' || shapeType === 'ellipse') ? 'Cone' : 'Pyramid';
     } else if (solidType === 'sphere') {
       typeTagLabel = 'Sphere';
     }
@@ -3639,7 +5020,7 @@ function renderDimensionsPanel() {
     let baseSummary = '';
     let baseInputsHtml = '';
 
-    switch (shape.id) {
+    switch (shapeType) {
       case 'square': {
         baseArea = shape.side * shape.side;
         baseSummary = `Side: ${shape.side} units · Base Area: ${formatMetric(baseArea)} sq units`;
@@ -3785,16 +5166,16 @@ function renderDimensionsPanel() {
     const optExtrude = `
       <button type="button" class="construction-opt-btn ${solidType === 'extrude' ? 'active' : ''}" data-type="extrude" id="opt_extrude">
         <span class="opt-icon">▤</span>
-        <span class="opt-label">${shape.id === 'circle' ? 'Extrude (Cyl)' : 'Add Height'}</span>
+        <span class="opt-label">${shapeType === 'circle' ? 'Extrude (Cyl)' : 'Add Height'}</span>
       </button>
     `;
     const optPyramid = `
       <button type="button" class="construction-opt-btn ${solidType === 'pyramid' ? 'active' : ''}" data-type="pyramid" id="opt_pyramid">
         <span class="opt-icon">▲</span>
-        <span class="opt-label">${shape.id === 'circle' || shape.id === 'ellipse' ? 'Cone' : 'Pyramid'}</span>
+        <span class="opt-label">${shapeType === 'circle' || shapeType === 'ellipse' ? 'Cone' : 'Pyramid'}</span>
       </button>
     `;
-    const optSphere = shape.id === 'circle' ? `
+    const optSphere = shapeType === 'circle' ? `
       <button type="button" class="construction-opt-btn ${solidType === 'sphere' ? 'active' : ''}" data-type="sphere" id="opt_sphere">
         <span class="opt-icon">●</span>
         <span class="opt-label">Sphere</span>
@@ -3826,7 +5207,7 @@ function renderDimensionsPanel() {
             <button type="button" class="preset-pill" data-val="3">h=3</button>
             <button type="button" class="preset-pill" data-val="4">h=4</button>
             <button type="button" class="preset-pill" data-val="5">h=5</button>
-            ${shape.id === 'square' && solidType === 'extrude' ? `
+            ${shapeType === 'square' && solidType === 'extrude' ? `
               <button type="button" class="preset-pill highlight" data-val="${shape.side}">Cube (h=s)</button>
             ` : ''}
           </div>
@@ -3869,7 +5250,7 @@ function renderDimensionsPanel() {
         <span id="shapePosLabel">Pos: (${shape.x.toFixed(1)}, ${(shape.y3D || 0).toFixed(1)}, ${(shape.z !== undefined ? shape.z : 0).toFixed(1)})</span>
         <div class="dim-footer-actions">
           <button type="button" class="dim-center-btn" id="btnCenterShape" title="Center shape at (0,0,0)">
-            Center (0,0,0)
+            Center
           </button>
           ${solidType !== 'flat' ? `
             <button type="button" class="dim-center-btn reset-flat-btn" id="btnResetToFlat" title="Reset to Flat 2D Base">
@@ -3896,7 +5277,7 @@ function renderDimensionsPanel() {
 
   let inputsHtml = '';
 
-  switch (shape.id) {
+  switch (shapeType) {
     case 'square':
       inputsHtml = `
         <div class="dim-input-row">
@@ -4093,7 +5474,7 @@ function renderDimensionsPanel() {
     <div class="dim-footer-note">
       <span id="shapePosLabel">${is3D ? `Pos: (${shape.x.toFixed(1)}, ${(shape.y3D || 0).toFixed(1)}, ${(shape.z !== undefined ? shape.z : 0).toFixed(1)})` : `Center: (${shape.x.toFixed(1)}, ${shape.y.toFixed(1)})`}</span>
       <button type="button" class="dim-center-btn" id="btnCenterShape" title="${is3D ? 'Center shape at (0,0,0)' : 'Center shape at (0,0)'}">
-        ${is3D ? 'Center (0,0,0)' : 'Center at (0,0)'}
+        ${is3D ? 'Center' : 'Center at (0,0)'}
       </button>
     </div>
     <div id="triangleWarning" style="display: none;" class="dim-warning-msg">
@@ -4197,7 +5578,7 @@ function attach3DConstructionListeners(shape) {
       if (!isNaN(parsed) && parsed > 0) {
         shape[property] = parsed;
 
-        if (shape.id === 'triangle') {
+        if (getShapeType(shape) === 'triangle') {
           const a = shape.sideA;
           const b = shape.sideB;
           const c = shape.sideC;
@@ -4215,7 +5596,7 @@ function attach3DConstructionListeners(shape) {
     inputEl.addEventListener('change', updateVal);
   };
 
-  switch (shape.id) {
+  switch (getShapeType(shape)) {
     case 'square':
       handleInputUpdate(document.getElementById('dim_square_side'), 'side');
       break;
@@ -4264,7 +5645,7 @@ function attachDimensionInputListeners(shape) {
       if (!isNaN(parsed) && parsed > 0) {
         shape[property] = parsed;
 
-        if (shape.id === 'triangle') {
+        if (getShapeType(shape) === 'triangle') {
           const a = shape.sideA;
           const b = shape.sideB;
           const c = shape.sideC;
@@ -4286,7 +5667,7 @@ function attachDimensionInputListeners(shape) {
     inputEl.addEventListener('change', updateVal);
   };
 
-  switch (shape.id) {
+  switch (getShapeType(shape)) {
     case 'square':
       handleInputUpdate(document.getElementById('dim_square_side'), 'side');
       break;
@@ -4359,7 +5740,7 @@ function updateDimensionsPanelValues() {
   setInputVal('dim_3d_height_slider', curH);
   setInputVal('dim_3d_height_num', curH);
 
-  switch (shape.id) {
+  switch (getShapeType(shape)) {
     case 'square':
       setInputVal('dim_square_side', shape.side);
       break;
@@ -4426,6 +5807,7 @@ function renderPropertiesPanel() {
   let rows = [];
   let formulaText = '';
   const is3D = currentViewMode === '3d';
+  const shapeType = getShapeType(shape);
 
   if (is3D) {
     const is2DShape = !shape.is3DOnly;
@@ -4441,7 +5823,7 @@ function renderPropertiesPanel() {
       let baseArea = 0;
       let perimeter = 0;
 
-      switch (shape.id) {
+      switch (shapeType) {
         case 'square': {
           const s = shape.side;
           baseArea = s * s;
@@ -4557,7 +5939,7 @@ function renderPropertiesPanel() {
       }
     } else if (is2DShape && solidType === 'extrude') {
       // Extruded 3D Prism or Cylinder
-      switch (shape.id) {
+      switch (shapeType) {
         case 'square': {
           const s = shape.side;
           const baseArea = s * s;
@@ -4699,7 +6081,7 @@ function renderPropertiesPanel() {
       }
     } else if (is2DShape && solidType === 'pyramid') {
       // Pyramid or Cone constructed from 2D Base
-      switch (shape.id) {
+      switch (shapeType) {
         case 'square': {
           const s = shape.side;
           const baseArea = s * s;
@@ -4859,7 +6241,7 @@ function renderPropertiesPanel() {
       formulaText = 'Volume = ⁴⁄₃πr³  |  Surface Area = 4πr²  |  Formed from Circle Base';
     } else {
       // Native 3D Solids
-      switch (shape.id) {
+      switch (shapeType) {
         case 'sphere': {
           const r = shape.radius;
           const diameter = 2 * r;
@@ -4942,7 +6324,7 @@ function renderPropertiesPanel() {
     if (propTitle) propTitle.textContent = 'Properties';
     if (badge) badge.textContent = shape.name;
 
-    switch (shape.id) {
+    switch (shapeType) {
       case 'square': {
         const s = shape.side;
         const area = s * s;
@@ -5115,12 +6497,35 @@ function formatMetric(val) {
 
 // --- HASH ROUTING (Routing Between Home and Dedicated Laboratories) ---
 function initHashRouting() {
-  window.addEventListener('hashchange', handleRouteChange);
+  window.addEventListener('hashchange', () => {
+    console.log('[MathLab Routing] hashchange detected:', window.location.hash);
+    handleRouteChange();
+  });
+
+  // Direct click handler on all hash navigation links (category cards, back buttons, brand logo)
+  // Ensures reliable navigation across all browser/iframe environments
+  document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const targetHash = link.getAttribute('href');
+      if (targetHash) {
+        console.log('[MathLab Navigation] Anchor link clicked:', targetHash);
+        if (window.location.hash !== targetHash) {
+          window.location.hash = targetHash;
+        } else {
+          handleRouteChange();
+        }
+      }
+    });
+  });
+
+  console.log('[MathLab Routing] Initial hash routing, current hash:', window.location.hash);
   handleRouteChange();
 }
 
 function handleRouteChange() {
   const rawHash = (window.location.hash || '').replace(/^#/, '').toLowerCase().trim();
+  console.log('[MathLab Routing] Handling route:', rawHash || '(home)');
+
   const homeView = document.getElementById('homeView');
   const labView = document.getElementById('labView');
   const geometryWorkspace = document.getElementById('geometryWorkspace');
@@ -5134,6 +6539,8 @@ function handleRouteChange() {
     document.body.classList.remove('geometry-mode');
     if (homeView) homeView.classList.add('active');
     if (labView) labView.classList.remove('active');
+    if (geometryWorkspace) geometryWorkspace.classList.remove('active');
+    if (placeholderWorkspace) placeholderWorkspace.classList.remove('active');
     if (currentViewMode === '3d') {
       disposeThreeScene();
     }
@@ -5150,6 +6557,9 @@ function handleRouteChange() {
     document.body.classList.add('geometry-mode');
     if (geometryWorkspace) geometryWorkspace.classList.add('active');
     if (placeholderWorkspace) placeholderWorkspace.classList.remove('active');
+
+    // Lazy initialize geometry systems on demand
+    ensureGeometryInitialized();
 
     setTimeout(() => {
       if (currentViewMode === '3d') {
@@ -5217,4 +6627,11 @@ function renderPlaceholderLab(config) {
       </div>
     `).join('');
   }
+}
+
+// --- Start Application (Ensures all functions, variables, and configs are fully defined) ---
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
 }

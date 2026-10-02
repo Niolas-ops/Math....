@@ -9,9 +9,13 @@
     <meta property="og:description" content="A virtual math laboratory where students and teachers can explore geometry and mathematical concepts visually and interactively." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <!-- Google Fonts for Modern Mathematical Visualization Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=STIX+Two+Text:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./style.css" />
   </head>
-  <body>
+  <body class="theme-dark">
     <!-- Top Navigation Bar -->
     <header class="navbar" id="appNavbar">
       <div class="nav-brand" id="navBrand">
@@ -22,8 +26,21 @@
           <span class="nav-title" id="navAppTitle">MathLab</span>
         </a>
       </div>
-      <div class="nav-tagline" id="navTagline">
-        Explore math by playing with it
+      <div class="nav-right-actions" id="navRightActions">
+        <div class="nav-tagline" id="navTagline">
+          Explore math by playing with it
+        </div>
+        <!-- Light / Dark Appearance Mode Toggle -->
+        <div class="theme-toggle-segmented" id="navbarThemeToggle" role="group" aria-label="Appearance Theme">
+          <button type="button" class="theme-toggle-btn active" id="btnNavThemeDark" data-theme="dark" aria-label="Switch to Dark Mode" title="Dark Mode (Mathematical Animation)">
+            <svg class="theme-btn-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <span class="theme-btn-text">Dark</span>
+          </button>
+          <button type="button" class="theme-toggle-btn" id="btnNavThemeLight" data-theme="light" aria-label="Switch to Light Mode" title="Light Mode (Drafting Paper)">
+            <svg class="theme-btn-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <span class="theme-btn-text">Light</span>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -483,7 +500,7 @@
         </div>
 
         <!-- 2A) GEOMETRY WORKSPACE (Full-Screen Infinite Grid + Floating Panels) -->
-        <div class="lab-workspace active" id="geometryWorkspace">
+        <div class="lab-workspace" id="geometryWorkspace">
           <!-- Full-Screen Infinite HTML5 Canvas (Desmos-like 2D) -->
           <canvas id="geometryCanvas" class="infinite-grid-canvas"></canvas>
 
@@ -504,6 +521,18 @@
             <div class="view-mode-toggle" id="viewModeToggle" role="group" aria-label="Dimension View Mode">
               <button type="button" class="toggle-option active" id="btnMode2D" data-mode="2d">2D</button>
               <button type="button" class="toggle-option" id="btnMode3D" data-mode="3d">3D</button>
+            </div>
+
+            <!-- Visual Theme Mode Toggle (Dark / Light) -->
+            <div class="theme-mode-toggle" id="geoThemeToggle" role="group" aria-label="Visual Theme Mode">
+              <button type="button" class="geo-theme-btn active" id="btnGeoThemeDark" data-theme="dark" title="Dark Mode (Mathematical Animation)">
+                <span class="theme-glyph" aria-hidden="true">🌙</span>
+                <span class="theme-text">Dark</span>
+              </button>
+              <button type="button" class="geo-theme-btn" id="btnGeoThemeLight" data-theme="light" title="Light Mode (Drafting Paper)">
+                <span class="theme-glyph" aria-hidden="true">☀️</span>
+                <span class="theme-text">Light</span>
+              </button>
             </div>
 
             <!-- 3D Controls Toolbar: UI Size Slider (50%-100%, default 75%) & Minimize Button -->
@@ -543,90 +572,40 @@
             </div>
 
             <div class="shape-selector-scroll-wrap" id="shapeSelectorScrollWrap">
-              <div class="shape-selector-list" id="shapeSelectorList">
-                <!-- Square -->
-                <label class="floating-shape-item" id="shapeItem_square" data-shape="square">
-                  <input type="checkbox" class="shape-checkbox-input" id="check_square" data-shape="square" checked aria-label="Toggle Square" />
-                  <span class="shape-color-indicator" style="background-color: #2563eb;"></span>
-                  <span class="shape-item-label">Square</span>
-                </label>
+              <!-- SECTION A: SHAPE LIBRARY -->
+              <div class="shape-library-section" id="shapeLibrarySection">
+                <div class="shape-section-subhead">
+                  <span>Shape Library</span>
+                  <span class="shape-lib-hint">Click to add</span>
+                </div>
 
-                <!-- Rectangle -->
-                <label class="floating-shape-item" id="shapeItem_rectangle" data-shape="rectangle">
-                  <input type="checkbox" class="shape-checkbox-input" id="check_rectangle" data-shape="rectangle" aria-label="Toggle Rectangle" />
-                  <span class="shape-color-indicator" style="background-color: #059669;"></span>
-                  <span class="shape-item-label">Rectangle</span>
-                </label>
+                <!-- Category Filters & Search Field -->
+                <div class="shape-lib-toolbar">
+                  <div class="shape-category-tabs" role="tablist" aria-label="Shape Categories">
+                    <button type="button" class="category-tab active" data-category="all">All</button>
+                    <button type="button" class="category-tab" data-category="2d">2D</button>
+                    <button type="button" class="category-tab" data-category="3d">3D</button>
+                  </div>
+                  <div class="shape-search-wrap">
+                    <span class="search-icon" aria-hidden="true">🔍</span>
+                    <input type="text" id="shapeSearchInput" class="shape-search-input" placeholder="Search shapes..." aria-label="Search shapes" />
+                  </div>
+                </div>
 
-                <!-- Circle -->
-                <label class="floating-shape-item" id="shapeItem_circle" data-shape="circle">
-                  <input type="checkbox" class="shape-checkbox-input" id="check_circle" data-shape="circle" aria-label="Toggle Circle" />
-                  <span class="shape-color-indicator" style="background-color: #dc2626;"></span>
-                  <span class="shape-item-label">Circle</span>
-                </label>
-
-                <!-- Triangle -->
-                <label class="floating-shape-item" id="shapeItem_triangle" data-shape="triangle">
-                  <input type="checkbox" class="shape-checkbox-input" id="check_triangle" data-shape="triangle" aria-label="Toggle Triangle" />
-                  <span class="shape-color-indicator" style="background-color: #ea580c;"></span>
-                  <span class="shape-item-label">Triangle</span>
-                </label>
-
-                <!-- Pentagon -->
-                <label class="floating-shape-item" id="shapeItem_pentagon" data-shape="pentagon">
-                  <input type="checkbox" class="shape-checkbox-input" id="check_pentagon" data-shape="pentagon" aria-label="Toggle Pentagon" />
-                  <span class="shape-color-indicator" style="background-color: #9333ea;"></span>
-                  <span class="shape-item-label">Pentagon</span>
-                </label>
-
-                <!-- Hexagon -->
-                <label class="floating-shape-item" id="shapeItem_hexagon" data-shape="hexagon">
-                  <input type="checkbox" class="shape-checkbox-input" id="check_hexagon" data-shape="hexagon" aria-label="Toggle Hexagon" />
-                  <span class="shape-color-indicator" style="background-color: #0d9488;"></span>
-                  <span class="shape-item-label">Hexagon</span>
-                </label>
-
-                <!-- Ellipse -->
-                <label class="floating-shape-item" id="shapeItem_ellipse" data-shape="ellipse">
-                  <input type="checkbox" class="shape-checkbox-input" id="check_ellipse" data-shape="ellipse" aria-label="Toggle Ellipse" />
-                  <span class="shape-color-indicator" style="background-color: #db2777;"></span>
-                  <span class="shape-item-label">Ellipse</span>
-                </label>
+                <!-- Visual Shape Library Grid (2D & 3D Items) -->
+                <div class="shape-library-grid" id="shapeLibraryGrid">
+                  <!-- Dynamically populated or rendered visual buttons with mathematical icons -->
+                </div>
               </div>
 
-              <!-- 3D-Only Shapes Section (Visible only in 3D mode) -->
-              <div class="shape-selector-3d-section" id="shapes3dSection" style="display: none;">
-                <div class="shapes-3d-header">
-                  <span class="shapes-3d-title">3D Shapes</span>
+              <!-- SECTION B: SHAPES ON GRAPH -->
+              <div class="shape-instances-section" id="shapeInstancesSection">
+                <div class="shape-section-subhead">
+                  <span>Shapes on Graph</span>
+                  <span class="graph-count-indicator" id="graphCountIndicator">1 object</span>
                 </div>
-                <div class="shape-selector-list" id="shapeSelector3dList">
-                  <!-- Sphere -->
-                  <label class="floating-shape-item" id="shapeItem_sphere" data-shape="sphere">
-                    <input type="checkbox" class="shape-checkbox-input" id="check_sphere" data-shape="sphere" aria-label="Toggle Sphere" />
-                    <span class="shape-color-indicator" style="background-color: #0284c7;"></span>
-                    <span class="shape-item-label">Sphere</span>
-                  </label>
-
-                  <!-- Pyramid -->
-                  <label class="floating-shape-item" id="shapeItem_pyramid" data-shape="pyramid">
-                    <input type="checkbox" class="shape-checkbox-input" id="check_pyramid" data-shape="pyramid" aria-label="Toggle Pyramid" />
-                    <span class="shape-color-indicator" style="background-color: #d97706;"></span>
-                    <span class="shape-item-label">Pyramid</span>
-                  </label>
-
-                  <!-- Cone -->
-                  <label class="floating-shape-item" id="shapeItem_cone" data-shape="cone">
-                    <input type="checkbox" class="shape-checkbox-input" id="check_cone" data-shape="cone" aria-label="Toggle Cone" />
-                    <span class="shape-color-indicator" style="background-color: #16a34a;"></span>
-                    <span class="shape-item-label">Cone</span>
-                  </label>
-
-                  <!-- Torus -->
-                  <label class="floating-shape-item" id="shapeItem_torus" data-shape="torus">
-                    <input type="checkbox" class="shape-checkbox-input" id="check_torus" data-shape="torus" aria-label="Toggle Torus / Donut" />
-                    <span class="shape-color-indicator" style="background-color: #8b5cf6;"></span>
-                    <span class="shape-item-label">Torus / Donut</span>
-                  </label>
+                <div class="shape-selector-list" id="shapeSelectorList">
+                  <!-- Dynamically populated shape items -->
                 </div>
               </div>
             </div>
