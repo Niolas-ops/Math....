@@ -757,13 +757,13 @@ function applyTheme(theme, save = true) {
 
   // If 3D scene exists, dynamically update background, lighting & materials
   if (threeScene) {
-    threeScene.background = new THREE.Color(isDark ? 0x090d16 : 0xf1f5f9);
+    threeScene.background = new THREE.Color(isDark ? 0x020618 : 0xffffff);
     if (threeSceneAmbientLight) {
       threeSceneAmbientLight.color.setHex(isDark ? 0xdbeafe : 0xffffff);
       threeSceneAmbientLight.intensity = isDark ? 0.65 : 0.85;
     }
     if (threeSceneSecondaryLight) {
-      threeSceneSecondaryLight.color.setHex(isDark ? 0x38bdf8 : 0xffffff);
+      threeSceneSecondaryLight.color.setHex(isDark ? 0x3bb8db : 0xffffff);
       threeSceneSecondaryLight.intensity = isDark ? 0.45 : 0.25;
     }
     numberSpriteCache.clear();
@@ -1985,7 +1985,7 @@ function initThreeScene() {
   // 1. Scene setup with theme viewport background
   const isDark = currentTheme === 'dark';
   threeScene = new THREE.Scene();
-  threeScene.background = new THREE.Color(isDark ? 0x090d16 : 0xf1f5f9);
+  threeScene.background = new THREE.Color(isDark ? 0x020618 : 0xffffff);
 
   // 2. Camera setup
   const aspect = window.innerWidth / window.innerHeight;
@@ -2021,7 +2021,7 @@ function initThreeScene() {
   threeSceneDirLight.shadow.mapSize.height = 2048;
   threeScene.add(threeSceneDirLight);
 
-  threeSceneSecondaryLight = new THREE.DirectionalLight(isDark ? 0x38bdf8 : 0xffffff, isDark ? 0.45 : 0.25);
+  threeSceneSecondaryLight = new THREE.DirectionalLight(isDark ? 0x3bb8db : 0xffffff, isDark ? 0.45 : 0.25);
   threeSceneSecondaryLight.position.set(-16, -10, -16);
   threeScene.add(threeSceneSecondaryLight);
 
@@ -2506,9 +2506,9 @@ function createShapeLabelSprite(text, isHighlighted) {
 
   // Background rounded pill
   if (isHighlighted) {
-    ctx.fillStyle = isDark ? 'rgba(2, 132, 199, 0.95)' : 'rgba(37, 99, 235, 0.95)';
+    ctx.fillStyle = isDark ? '#3BB8DB' : '#0284c7';
   } else {
-    ctx.fillStyle = isDark ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.92)';
+    ctx.fillStyle = isDark ? 'rgba(2, 6, 24, 0.92)' : 'rgba(255, 255, 255, 0.95)';
   }
 
   const r = 16;
@@ -2522,11 +2522,11 @@ function createShapeLabelSprite(text, isHighlighted) {
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = isHighlighted ? (isDark ? '#00f0ff' : '#ffffff') : (isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(203, 213, 225, 0.9)');
+  ctx.strokeStyle = isHighlighted ? (isDark ? '#3BB8DB' : '#ffffff') : (isDark ? 'rgba(59, 184, 219, 0.4)' : 'rgba(203, 213, 225, 0.9)');
   ctx.lineWidth = 2.5;
   ctx.stroke();
 
-  ctx.fillStyle = isHighlighted ? '#ffffff' : (isDark ? '#e2e8f0' : '#1e293b');
+  ctx.fillStyle = isHighlighted ? (isDark ? '#020618' : '#ffffff') : (isDark ? '#ffffff' : '#0f172a');
   ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -3711,7 +3711,7 @@ function rebuildThreeShapes() {
     });
 
     if (isActive) {
-      mat.emissive = new THREE.Color(isDark ? 0x00f0ff : 0x2563eb);
+      mat.emissive = new THREE.Color(isDark ? 0x3bb8db : 0x0284c7);
       mat.emissiveIntensity = isFlat ? 0.25 : 0.35;
     }
 
@@ -3727,7 +3727,7 @@ function rebuildThreeShapes() {
 
     // Edges geometry highlight line
     const edgesGeom = new THREE.EdgesGeometry(geom, isFlat ? 10 : 22);
-    const edgeColor = isActive ? (isDark ? 0x00f0ff : 0x2563eb) : (shape.strokeColor || shape.color);
+    const edgeColor = isActive ? (isDark ? 0x3bb8db : 0x0284c7) : (shape.strokeColor || shape.color);
     const edgeMat = new THREE.LineBasicMaterial({
       color: edgeColor,
       linewidth: isActive ? 3 : 1.5,
@@ -3741,7 +3741,7 @@ function rebuildThreeShapes() {
     if (isFlat && cornerVerts) {
       const vGeom = new THREE.SphereGeometry(0.11, 16, 16);
       const vMat = new THREE.MeshStandardMaterial({
-        color: isActive ? (isDark ? 0x00f0ff : 0x2563eb) : (isDark ? 0x64748b : 0x94a3b8),
+        color: isActive ? (isDark ? 0x3bb8db : 0x0284c7) : (isDark ? 0x64748b : 0x94a3b8),
         roughness: 0.3,
         metalness: 0.4
       });
@@ -3766,8 +3766,8 @@ function rebuildThreeShapes() {
     if (isActive && canAdjustHeight && topY > 0.2) {
       const handleGeom = new THREE.SphereGeometry(0.18, 16, 16);
       const handleMat = new THREE.MeshStandardMaterial({
-        color: isDark ? 0x00f0ff : 0x2563eb,
-        emissive: isDark ? 0x0284c7 : 0x1d4ed8,
+        color: isDark ? 0x3bb8db : 0x0284c7,
+        emissive: isDark ? 0x0284c7 : 0x0369a1,
         emissiveIntensity: 0.6,
         roughness: 0.2,
         metalness: 0.8
@@ -3777,7 +3777,7 @@ function rebuildThreeShapes() {
       handleMesh.userData = { isHeightHandle: true, shapeId: shape.id };
 
       const stemGeom = new THREE.CylinderGeometry(0.025, 0.025, 0.22, 8);
-      const stemMat = new THREE.MeshBasicMaterial({ color: isDark ? 0x00f0ff : 0x2563eb });
+      const stemMat = new THREE.MeshBasicMaterial({ color: isDark ? 0x3bb8db : 0x0284c7 });
       const stemMesh = new THREE.Mesh(stemGeom, stemMat);
       stemMesh.position.set(0, topY + 0.06, 0);
       stemMesh.userData = { isHeightHandle: true, shapeId: shape.id };
@@ -4187,7 +4187,7 @@ function drawInfiniteGrid(width, height) {
 
   // Background clear/fill to ensure no white flash or bleed
   ctx.save();
-  ctx.fillStyle = isDark ? '#090d16' : '#fafbfc';
+  ctx.fillStyle = isDark ? '#020618' : '#ffffff';
   ctx.fillRect(0, 0, width, height);
 
   // Determine nice grid unit step (1, 2, 5 * 10^k)
@@ -4207,7 +4207,7 @@ function drawInfiniteGrid(width, height) {
 
   // --- Minor Grid Lines ---
   ctx.lineWidth = 1;
-  ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.045)' : 'rgba(15, 23, 42, 0.06)';
+  ctx.strokeStyle = isDark ? 'rgba(59, 184, 219, 0.08)' : 'rgba(15, 23, 42, 0.06)';
 
   ctx.beginPath();
   const startMinorX = Math.floor(xMin / minorStep) * minorStep;
@@ -4227,7 +4227,7 @@ function drawInfiniteGrid(width, height) {
 
   // --- Major Grid Lines (Darker lines every 5 units / major steps) ---
   ctx.lineWidth = 1.2;
-  ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 23, 42, 0.14)';
+  ctx.strokeStyle = isDark ? 'rgba(59, 184, 219, 0.22)' : 'rgba(15, 23, 42, 0.14)';
 
   ctx.beginPath();
   const startMajorX = Math.floor(xMin / majorStep) * majorStep;
@@ -4262,7 +4262,7 @@ function drawInfiniteGrid(width, height) {
   ctx.stroke();
 
   // --- Axis Tick Labels (Desmos-like dynamic numbers) ---
-  ctx.font = '500 11px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.font = '500 11px "Inter", system-ui, sans-serif';
   ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.68)' : '#64748b';
 
   // Determine label position pinning if axes are off screen
@@ -4380,7 +4380,7 @@ function drawShape(shape, isActive) {
   }
 
   ctx.fillStyle = fillColor;
-  ctx.strokeStyle = isActive ? (isDark ? '#00f0ff' : '#2563eb') : strokeColor;
+  ctx.strokeStyle = isActive ? (isDark ? '#3BB8DB' : '#0284c7') : strokeColor;
   ctx.lineWidth = isActive ? 2.5 : 2;
 
   let labelText = '';
@@ -4717,9 +4717,9 @@ function drawShape(shape, isActive) {
   ctx.shadowBlur = 0;
   ctx.beginPath();
   ctx.arc(sx, sy, 3.5, 0, Math.PI * 2);
-  ctx.fillStyle = isActive ? (isDark ? '#00f0ff' : '#2563eb') : (isDark ? '#38bdf8' : shape.color);
+  ctx.fillStyle = isActive ? (isDark ? '#3BB8DB' : '#0284c7') : (isDark ? '#3BB8DB' : shape.color);
   ctx.fill();
-  ctx.strokeStyle = isDark ? '#090d16' : '#ffffff';
+  ctx.strokeStyle = isDark ? '#020618' : '#ffffff';
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
@@ -4762,15 +4762,15 @@ function drawRoundedRect(context, x, y, width, height, radius = 6) {
 function drawDimensionBadge(x, y, text, themeColor) {
   const isDark = currentTheme === 'dark';
   ctx.save();
-  ctx.font = '600 11px "STIX Two Text", "Plus Jakarta Sans", serif';
+  ctx.font = '600 11px "Inter", "STIX Two Text", sans-serif';
   const textWidth = ctx.measureText(text).width;
   const paddingX = 8;
   const badgeWidth = textWidth + paddingX * 2;
   const badgeHeight = 19;
 
   // Background pill
-  ctx.fillStyle = isDark ? 'rgba(15, 23, 42, 0.90)' : 'rgba(255, 255, 255, 0.94)';
-  ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.20)' : 'rgba(203, 213, 225, 0.9)';
+  ctx.fillStyle = isDark ? 'rgba(2, 6, 24, 0.92)' : 'rgba(255, 255, 255, 0.94)';
+  ctx.strokeStyle = isDark ? 'rgba(59, 184, 219, 0.4)' : 'rgba(203, 213, 225, 0.9)';
   ctx.lineWidth = 1;
   ctx.shadowColor = isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.08)';
   ctx.shadowBlur = isDark ? 6 : 4;
@@ -4784,7 +4784,7 @@ function drawDimensionBadge(x, y, text, themeColor) {
   // Text
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
-  ctx.fillStyle = isDark ? '#f8fafc' : '#1e293b';
+  ctx.fillStyle = isDark ? '#ffffff' : '#1e293b';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, x, y);
@@ -4795,7 +4795,7 @@ function drawDimensionBadge(x, y, text, themeColor) {
 function drawActiveSelectionIndicators(shape, sx, sy) {
   const isDark = currentTheme === 'dark';
   ctx.save();
-  ctx.strokeStyle = isDark ? '#00f0ff' : '#2563eb';
+  ctx.strokeStyle = isDark ? '#3BB8DB' : '#0284c7';
   ctx.lineWidth = 1.5;
   ctx.setLineDash([4, 4]);
 
@@ -4812,23 +4812,23 @@ function drawActiveSelectionIndicators(shape, sx, sy) {
   ctx.setLineDash([]);
   ctx.moveTo(sx, sy - halfH);
   ctx.lineTo(sx, sy - halfH - stem);
-  ctx.strokeStyle = isDark ? '#00f0ff' : '#2563eb';
+  ctx.strokeStyle = isDark ? '#3BB8DB' : '#0284c7';
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
   // Handle circle (rotation)
   ctx.beginPath();
   ctx.arc(sx, sy - halfH - stem, 6, 0, Math.PI * 2);
-  ctx.fillStyle = isDark ? '#090d16' : '#ffffff';
+  ctx.fillStyle = isDark ? '#020618' : '#ffffff';
   ctx.fill();
-  ctx.strokeStyle = isDark ? '#00f0ff' : '#2563eb';
+  ctx.strokeStyle = isDark ? '#3BB8DB' : '#0284c7';
   ctx.lineWidth = 2;
   ctx.stroke();
 
   // Handle center dot
   ctx.beginPath();
   ctx.arc(sx, sy - halfH - stem, 2, 0, Math.PI * 2);
-  ctx.fillStyle = isDark ? '#00f0ff' : '#2563eb';
+  ctx.fillStyle = isDark ? '#3BB8DB' : '#0284c7';
   ctx.fill();
 
   // 3. Resize handles (8 square handles on corners and edges)
@@ -4841,9 +4841,9 @@ function drawActiveSelectionIndicators(shape, sx, sy) {
     const hy = sy + h.y;
     ctx.beginPath();
     ctx.rect(hx - halfS, hy - halfS, handleSize, handleSize);
-    ctx.fillStyle = isDark ? '#00f0ff' : '#ffffff';
+    ctx.fillStyle = isDark ? '#3BB8DB' : '#ffffff';
     ctx.fill();
-    ctx.strokeStyle = isDark ? '#090d16' : '#2563eb';
+    ctx.strokeStyle = isDark ? '#020618' : '#0284c7';
     ctx.lineWidth = 1.5;
     ctx.stroke();
   });
@@ -4978,7 +4978,6 @@ function renderDimensionsPanel() {
   const badge = document.getElementById('dimActiveShapeTag');
   const body = document.getElementById('dimensionsBody');
   const panelTitle = document.getElementById('dimPanelTitle');
-  const panelIcon = document.getElementById('dimPanelIcon');
   if (!body) return;
 
   const shape = activeShapeId ? SHAPES[activeShapeId] : null;
@@ -4986,7 +4985,6 @@ function renderDimensionsPanel() {
   if (!shape || !shape.visible) {
     if (badge) badge.textContent = 'None';
     if (panelTitle) panelTitle.textContent = currentViewMode === '3d' ? '3D Construction' : 'Dimensions';
-    if (panelIcon) panelIcon.textContent = currentViewMode === '3d' ? '🏗️' : '📏';
     body.innerHTML = `
       <div class="no-active-shape-msg">
         Select a shape from the Shapes panel to view &amp; edit dimensions.
@@ -5000,7 +4998,6 @@ function renderDimensionsPanel() {
 
   if (is3D && !shape.is3DOnly) {
     // Dedicated 3D Construction & Modeling Environment for 2D Base Shapes
-    if (panelIcon) panelIcon.textContent = '🏗️';
     if (panelTitle) panelTitle.textContent = '3D Construction';
 
     const solidType = shape.solid3DType || 'flat';
@@ -5271,7 +5268,6 @@ function renderDimensionsPanel() {
   }
 
   // 2D View Mode or 3D-only Shapes
-  if (panelIcon) panelIcon.textContent = is3D ? '📐' : '📏';
   if (panelTitle) panelTitle.textContent = is3D ? '3D Dimensions' : 'Dimensions';
   if (badge) badge.textContent = shape.name;
 
@@ -5787,7 +5783,6 @@ function renderPropertiesPanel() {
   const badge = document.getElementById('propActiveShapeTag');
   const body = document.getElementById('propertiesBody');
   const propTitle = document.getElementById('propPanelTitle');
-  const propIcon = document.getElementById('propPanelIcon');
   if (!body) return;
 
   const shape = activeShapeId ? SHAPES[activeShapeId] : null;
@@ -5795,7 +5790,6 @@ function renderPropertiesPanel() {
   if (!shape || !shape.visible) {
     if (badge) badge.textContent = 'None';
     if (propTitle) propTitle.textContent = 'Properties';
-    if (propIcon) propIcon.textContent = '📊';
     body.innerHTML = `
       <div class="no-active-shape-msg">
         Select a shape from the Shapes panel to view properties.

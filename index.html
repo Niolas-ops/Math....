@@ -9,10 +9,10 @@
     <meta property="og:description" content="A virtual math laboratory where students and teachers can explore geometry and mathematical concepts visually and interactively." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <!-- Google Fonts for Modern Mathematical Visualization Typography -->
+    <!-- Google Fonts: Inter Universal Typography & Mathematical Serif -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=STIX+Two+Text:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body class="theme-dark">
@@ -32,12 +32,10 @@
         </div>
         <!-- Light / Dark Appearance Mode Toggle -->
         <div class="theme-toggle-segmented" id="navbarThemeToggle" role="group" aria-label="Appearance Theme">
-          <button type="button" class="theme-toggle-btn active" id="btnNavThemeDark" data-theme="dark" aria-label="Switch to Dark Mode" title="Dark Mode (Mathematical Animation)">
-            <svg class="theme-btn-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <button type="button" class="theme-toggle-btn active" id="btnNavThemeDark" data-theme="dark" aria-label="Switch to Dark Mode" title="Dark Mode">
             <span class="theme-btn-text">Dark</span>
           </button>
-          <button type="button" class="theme-toggle-btn" id="btnNavThemeLight" data-theme="light" aria-label="Switch to Light Mode" title="Light Mode (Drafting Paper)">
-            <svg class="theme-btn-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <button type="button" class="theme-toggle-btn" id="btnNavThemeLight" data-theme="light" aria-label="Switch to Light Mode" title="Light Mode">
             <span class="theme-btn-text">Light</span>
           </button>
         </div>
@@ -525,12 +523,10 @@
 
             <!-- Visual Theme Mode Toggle (Dark / Light) -->
             <div class="theme-mode-toggle" id="geoThemeToggle" role="group" aria-label="Visual Theme Mode">
-              <button type="button" class="geo-theme-btn active" id="btnGeoThemeDark" data-theme="dark" title="Dark Mode (Mathematical Animation)">
-                <span class="theme-glyph" aria-hidden="true">🌙</span>
+              <button type="button" class="geo-theme-btn active" id="btnGeoThemeDark" data-theme="dark" title="Dark Mode">
                 <span class="theme-text">Dark</span>
               </button>
-              <button type="button" class="geo-theme-btn" id="btnGeoThemeLight" data-theme="light" title="Light Mode (Drafting Paper)">
-                <span class="theme-glyph" aria-hidden="true">☀️</span>
+              <button type="button" class="geo-theme-btn" id="btnGeoThemeLight" data-theme="light" title="Light Mode">
                 <span class="theme-text">Light</span>
               </button>
             </div>
@@ -566,7 +562,6 @@
 
             <div class="floating-panel-header">
               <div class="panel-header-title-group">
-                <span class="panel-header-icon" aria-hidden="true">📐</span>
                 <span class="panel-header-title">Shapes</span>
               </div>
             </div>
@@ -612,7 +607,7 @@
           </div>
 
           <!-- Bottom-Left Floating Panel: Calculator / Properties Panel (Stacked below Shapes) -->
-          <div class="floating-glass-panel properties-panel" id="propertiesPanel">
+          <div class="floating-glass-panel properties-panel properties-chart-3d" id="propertiesPanel" data-component="3d-properties-chart">
             <!-- External Arrow Toggle Tab -->
             <button type="button" class="panel-toggle-tab tab-left-panel" id="btnToggleProperties" aria-label="Toggle Properties Panel" title="Close Properties Panel" aria-expanded="true">
               <svg class="panel-toggle-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -622,11 +617,10 @@
 
             <div class="floating-panel-header">
               <div class="panel-header-title-group">
-                <span class="panel-header-icon" id="propPanelIcon" aria-hidden="true">📊</span>
                 <span class="panel-header-title" id="propPanelTitle">Properties</span>
               </div>
             </div>
-            <div class="properties-body" id="propertiesBody">
+            <div class="properties-body properties-chart-3d" id="propertiesBody" data-component="3d-properties-chart">
               <!-- Dynamically populated properties with real-time math calculations -->
             </div>
           </div>
@@ -642,7 +636,6 @@
 
             <div class="floating-panel-header">
               <div class="panel-header-title-group">
-                <span class="panel-header-icon" id="dimPanelIcon" aria-hidden="true">📏</span>
                 <span class="panel-header-title" id="dimPanelTitle">Dimensions</span>
               </div>
             </div>
