@@ -531,6 +531,13 @@
               </button>
             </div>
 
+            <!-- Coordinate Graph Visibility Toggle (ON / OFF) -->
+            <div class="graph-mode-toggle" id="geoGraphToggle" role="group" aria-label="Coordinate Graph Visibility">
+              <span class="graph-toggle-label">Graph</span>
+              <button type="button" class="geo-graph-btn active" id="btnGraphOn" data-graph="on" title="Graph: ON (Show Coordinate Grid &amp; Axes)">ON</button>
+              <button type="button" class="geo-graph-btn" id="btnGraphOff" data-graph="off" title="Graph: OFF (Hide Coordinate Grid &amp; Axes)">OFF</button>
+            </div>
+
             <!-- 3D Controls Toolbar: UI Size Slider (50%-100%, default 75%) & Minimize Button -->
             <div class="geo-3d-toolbar" id="geo3DToolbar" style="display: none;">
               <div class="ui-size-control-wrap" title="Adjust 3D Controls Size (50% - 100%)">
@@ -650,6 +657,9 @@
             <button type="button" class="grid-ctrl-btn" id="geoZoomOutBtn" title="Zoom Out (−)" aria-label="Zoom Out">−</button>
             <button type="button" class="grid-ctrl-btn reset-origin-btn" id="geoResetViewBtn" title="Reset View to Center (0,0)" aria-label="Reset View">
               <span aria-hidden="true">⌂</span>
+            </button>
+            <button type="button" class="grid-ctrl-btn" id="geoGraphQuickBtn" title="Toggle Graph (Grid &amp; Axes) ON/OFF" aria-label="Toggle Graph Grid">
+              <span id="geoGraphQuickText" style="font-weight: 700; font-size: 11px;">GRID</span>
             </button>
             <div class="grid-coords-readout" id="gridCoordsReadout" title="Cursor Position in Math Coordinates">
               (0.00, 0.00)

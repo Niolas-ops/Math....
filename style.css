@@ -2171,6 +2171,173 @@ body.mode-3d .dim-center-btn {
   text-align: center;
 }
 
+/* 3D Properties Chart Font Scaling (0.5x scaling to match compact sidebars) */
+.properties-chart-3d,
+.properties-chart-3d *,
+[data-component="3d-properties-chart"] * {
+  font-size: 0.75rem !important;
+  line-height: 1.2 !important;
+}
+
+/* COORDINATE GRAPH VISIBILITY TOGGLE (TOP-LEFT BAR) */
+.graph-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 3px 5px;
+  border-radius: 8px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  gap: 4px;
+}
+
+body.theme-dark .graph-mode-toggle {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(59, 184, 219, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.graph-toggle-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding-left: 3px;
+  padding-right: 2px;
+  user-select: none;
+}
+
+.geo-graph-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.geo-graph-btn:hover {
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+body.theme-dark .geo-graph-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.geo-graph-btn.active {
+  background: #ffffff;
+  color: #0284c7;
+  border-color: rgba(2, 132, 199, 0.25);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+body.theme-dark .geo-graph-btn.active {
+  background: #020618;
+  color: #3bb8db;
+  border-color: rgba(59, 184, 219, 0.45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* SHAPE COLOR CUSTOMIZATION UI IN DIMENSIONS PANEL */
+.dim-color-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+  gap: 0.5rem;
+}
+
+.dim-color-control-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.dim-color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.dim-color-swatch:hover {
+  transform: scale(1.15);
+}
+
+.dim-color-input {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  -webkit-appearance: none;
+}
+
+.dim-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.dim-color-input::-webkit-color-swatch {
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+}
+
+body.theme-dark .dim-color-input::-webkit-color-swatch {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dim-color-reset-btn {
+  font-size: 0.68rem;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dim-color-reset-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+  background: var(--bg-card);
+}
+
+.dim-contrast-warning {
+  font-size: 0.72rem;
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  margin-top: 0.25rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+body.theme-dark .dim-contrast-warning {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
 /* BOTTOM-LEFT PROPERTIES PANEL (STACKED DIRECTLY UNDER SHAPES) */
 .properties-panel {
   position: fixed;

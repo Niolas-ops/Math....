@@ -638,6 +638,7 @@ const gridState = {
   originX: 0,       // screen pixel X of math (0,0)
   originY: 0,       // screen pixel Y of math (0,0)
   scale: 40,        // pixels per math unit (default 40px)
+  showGraph: true,  // Graph visibility toggle state (ON / OFF)
   isPanning: false,
   panStartX: 0,
   panStartY: 0,
@@ -648,12 +649,107 @@ const gridState = {
   isResizingShape: false,
   resizeHandleId: null,
   resizeInitialShape: null,
+  resizeInitialTriangleVerts: null,
   resizeInitialLocal: { x: 0, y: 0 },
   resizeInitialDist: 1,
   draggedShape: null,
   shapeDragOffsetMathX: 0,
   shapeDragOffsetMathY: 0
 };
+
+// Centralized Visual Theme Object
+const GRAPH_THEME = {
+  light: {
+    primary: '#111111',
+    secondary: '#475569',
+    gridMinor: 'rgba(15, 23, 42, 0.06)',
+    gridMajor: 'rgba(15, 23, 42, 0.16)',
+    axis: '#111111',
+    label: '#111111',
+    tick: '#111111',
+    selection: '#0284c7',
+    background: '#ffffff',
+    surface: '#f8fafc',
+    shapeDefaultStroke: '#111111',
+    shapeDefaultFill: 'rgba(17, 17, 17, 0.08)',
+    construction: '#d97706',
+    mathText: '#111111',
+    axisX: '#ef4444',
+    axisY: '#10b981',
+    axisZ: '#2563eb'
+  },
+  dark: {
+    primary: '#f8fafc',
+    secondary: '#94a3b8',
+    gridMinor: 'rgba(255, 255, 255, 0.07)',
+    gridMajor: 'rgba(255, 255, 255, 0.18)',
+    axis: '#f8fafc',
+    label: '#f8fafc',
+    tick: '#f8fafc',
+    selection: '#3BB8DB',
+    background: '#020618',
+    surface: '#0f172a',
+    shapeDefaultStroke: '#f8fafc',
+    shapeDefaultFill: 'rgba(248, 250, 252, 0.12)',
+    construction: '#facc15',
+    mathText: '#f8fafc',
+    axisX: '#ef4444',
+    axisY: '#10b981',
+    axisZ: '#2563eb'
+  }
+};
+
+function getRelativeLuminance(r, g, b) {
+  const [rs, gs, bs] = [r, g, b].map(c => {
+    c = c / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+function hexToRgb(hex) {
+  let c = String(hex).replace('#', '');
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  const num = parseInt(c, 16);
+  if (isNaN(num)) return { r: 128, g: 128, b: 128 };
+  return {
+    r: (num >> 16) & 255,
+    g: (num >> 8) & 255,
+    b: num & 255
+  };
+}
+
+function getContrastRatio(hex1, hex2) {
+  const rgb1 = hexToRgb(hex1);
+  const rgb2 = hexToRgb(hex2);
+  const L1 = getRelativeLuminance(rgb1.r, rgb1.g, rgb1.b);
+  const L2 = getRelativeLuminance(rgb2.r, rgb2.g, rgb2.b);
+  const lighter = Math.max(L1, L2);
+  const darker = Math.min(L1, L2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function setGraphVisibility(visible) {
+  gridState.showGraph = !!visible;
+  const btnOn = document.getElementById('btnGraphOn');
+  const btnOff = document.getElementById('btnGraphOff');
+  const quickBtn = document.getElementById('geoGraphQuickBtn');
+
+  if (btnOn) btnOn.classList.toggle('active', gridState.showGraph);
+  if (btnOff) btnOff.classList.toggle('active', !gridState.showGraph);
+  if (quickBtn) quickBtn.classList.toggle('active', gridState.showGraph);
+
+  if (threeDynamicGridGroup) {
+    threeDynamicGridGroup.visible = gridState.showGraph;
+  }
+  if (threeAxesGroup) {
+    threeAxesGroup.visible = gridState.showGraph;
+  }
+
+  if (currentViewMode === '2d' && ctx && canvas) {
+    render();
+  }
+}
 
 // DOM References & Interactive State
 let canvas = null;
@@ -895,6 +991,15 @@ function getShapeHalfExtents(shape) {
     const R = shape.side * gridState.scale;
     halfW = R + 6;
     halfH = R + 6;
+  } else if (type === 'line' || type === 'segment') {
+    halfW = ((shape.length || 6) * gridState.scale) / 2 + 6;
+    halfH = 12;
+  } else if (type === 'ray') {
+    halfW = ((shape.length || 7) * gridState.scale) + 6;
+    halfH = 12;
+  } else if (type === 'point') {
+    halfW = Math.max(12, (shape.radius || 0.35) * gridState.scale + 6);
+    halfH = halfW;
   } else {
     halfW = ((shape.side || 4) * gridState.scale) + 8;
     halfH = halfW;
@@ -902,9 +1007,106 @@ function getShapeHalfExtents(shape) {
   return { halfW, halfH };
 }
 
+// Shape-specific handles system (PART 19)
 function getShapeResizeHandles(shape) {
   if (!shape || shape.is3DOnly) return [];
-  const { halfW, halfH } = getShapeHalfExtents(shape);
+  const type = getShapeType(shape);
+  const scale = gridState.scale;
+
+  // Point: no resize handles (PART 18)
+  if (type === 'point') {
+    return [];
+  }
+
+  // Line / Segment: 2 endpoint handles (PART 15 & 16)
+  if (type === 'line' || type === 'segment') {
+    const len = (shape.length || 6) * scale;
+    return [
+      { id: 'start', x: -len / 2, y: 0, cursor: 'grab' },
+      { id: 'end',   x: len / 2,  y: 0, cursor: 'grab' }
+    ];
+  }
+
+  // Ray: origin handle + direction handle (PART 17)
+  if (type === 'ray') {
+    const len = (shape.length || 7) * scale;
+    return [
+      { id: 'origin', x: 0,   y: 0, cursor: 'move' },
+      { id: 'dir',    x: len, y: 0, cursor: 'grab' }
+    ];
+  }
+
+  // Circle: single radial resize handle (PART 11)
+  if (type === 'circle') {
+    const r = shape.radius * scale;
+    return [
+      { id: 'radius', x: r, y: 0, cursor: 'ew-resize' }
+    ];
+  }
+
+  // Ellipse: 4 axis handles + 4 corner handles (PART 12)
+  if (type === 'ellipse') {
+    const rx = shape.radiusX * scale;
+    const ry = shape.radiusY * scale;
+    return [
+      { id: 'e',  x: rx,  y: 0,   cursor: 'ew-resize' },
+      { id: 'w',  x: -rx, y: 0,   cursor: 'ew-resize' },
+      { id: 'n',  x: 0,   y: -ry, cursor: 'ns-resize' },
+      { id: 's',  x: 0,   y: ry,  cursor: 'ns-resize' },
+      { id: 'ne', x: rx,  y: -ry, cursor: 'nesw-resize' },
+      { id: 'nw', x: -rx, y: -ry, cursor: 'nwse-resize' },
+      { id: 'se', x: rx,  y: ry,  cursor: 'nwse-resize' },
+      { id: 'sw', x: -rx, y: ry,  cursor: 'nesw-resize' }
+    ];
+  }
+
+  // Triangle: vertex handles for actual calculated vertices (PART 14)
+  if (type === 'triangle') {
+    const verts = getTriangleVertices(shape);
+    return verts.map((v, idx) => ({
+      id: `v${idx}`,
+      x: (v.x - shape.x) * scale,
+      y: -(v.y - shape.y) * scale,
+      cursor: 'crosshair'
+    }));
+  }
+
+  // Regular Polygons: vertex handles (PART 13)
+  if (type === 'hexagon') {
+    const verts = getRegularPolygonVertices(shape.x, shape.y, 6, shape.side);
+    return verts.map((v, idx) => ({
+      id: `v${idx}`,
+      x: (v.x - shape.x) * scale,
+      y: -(v.y - shape.y) * scale,
+      cursor: 'crosshair'
+    }));
+  }
+
+  if (type === 'pentagon') {
+    const verts = getRegularPolygonVertices(shape.x, shape.y, 5, shape.side);
+    return verts.map((v, idx) => ({
+      id: `v${idx}`,
+      x: (v.x - shape.x) * scale,
+      y: -(v.y - shape.y) * scale,
+      cursor: 'crosshair'
+    }));
+  }
+
+  // Rectangle / Square: 8 handles on edges and corners
+  let halfW = 20;
+  let halfH = 20;
+  if (type === 'square') {
+    halfW = (shape.side * scale) / 2;
+    halfH = halfW;
+  } else if (type === 'rectangle') {
+    halfW = (shape.width * scale) / 2;
+    halfH = (shape.length * scale) / 2;
+  } else {
+    const ext = getShapeHalfExtents(shape);
+    halfW = ext.halfW - 6;
+    halfH = ext.halfH - 6;
+  }
+
   return [
     { id: 'nw', x: -halfW, y: -halfH, cursor: 'nwse-resize' },
     { id: 'n',  x: 0,      y: -halfH, cursor: 'ns-resize' },
@@ -933,9 +1135,21 @@ function screenToShapeLocalCoords(shape, screenX, screenY) {
 
 function isRotationHandleClicked(shape, screenX, screenY, hitRadius = 14) {
   if (!shape || !shape.visible || shape.is3DOnly) return false;
-  const { halfH } = getShapeHalfExtents(shape);
+  const type = getShapeType(shape);
+  // Point, circle, segment, line, ray do not use rotation stem knob
+  if (type === 'point' || type === 'circle' || type === 'line' || type === 'segment' || type === 'ray') {
+    return false;
+  }
+  let halfH = 20;
+  if (type === 'square') {
+    halfH = (shape.side * gridState.scale) / 2 + 4;
+  } else if (type === 'rectangle') {
+    halfH = (shape.length * gridState.scale) / 2 + 4;
+  } else {
+    halfH = getShapeHalfExtents(shape).halfH;
+  }
   const { localX, localY } = screenToShapeLocalCoords(shape, screenX, screenY);
-  return Math.hypot(localX - 0, localY - (-halfH - 24)) <= hitRadius;
+  return Math.hypot(localX - 0, localY - (-halfH - 22)) <= hitRadius;
 }
 
 function getResizeHandleAtScreenCoords(shape, screenX, screenY, hitRadius = 10) {
@@ -950,79 +1164,264 @@ function getResizeHandleAtScreenCoords(shape, screenX, screenY, hitRadius = 10) 
   return null;
 }
 
+// ANCHOR-BASED RESIZING (PARTS 7-19)
+// Dragging one handle moves only that boundary/vertex, keeping the opposite anchor completely fixed!
 function applyShapeResize(shape, screenX, screenY) {
   if (!shape || !gridState.resizeHandleId) return;
-  const { localX, localY } = screenToShapeLocalCoords(shape, screenX, screenY);
   const hId = gridState.resizeHandleId;
-  const initShape = gridState.resizeInitialShape;
-  if (!initShape) return;
-  const initDist = gridState.resizeInitialDist || 1;
-  const currDist = Math.max(1, Math.hypot(localX, localY));
-  const ratio = currDist / initDist;
+  const init = gridState.resizeInitialShape;
+  if (!init) return;
 
-  switch (getShapeType(shape)) {
-    case 'square': {
-      let newSide = shape.side;
-      if (hId === 'e' || hId === 'w') {
-        newSide = (Math.abs(localX) * 2) / gridState.scale;
-      } else if (hId === 'n' || hId === 's') {
-        newSide = (Math.abs(localY) * 2) / gridState.scale;
-      } else {
-        newSide = (Math.max(Math.abs(localX), Math.abs(localY)) * 2) / gridState.scale;
-      }
-      shape.side = Math.max(0.1, Math.round(newSide * 100) / 100);
-      break;
+  const type = getShapeType(shape);
+  const rot = init.rotation || 0;
+  const scale = gridState.scale;
+
+  // Convert current mouse screen position to local coordinates relative to INITIAL shape center
+  const initCenterSx = toScreenX(init.x);
+  const initCenterSy = toScreenY(init.y);
+  const dx = screenX - initCenterSx;
+  const dy = screenY - initCenterSy;
+  const cosR = Math.cos(-rot);
+  const sinR = Math.sin(-rot);
+  const localX = dx * cosR - dy * sinR;
+  const localY = dx * sinR + dy * cosR;
+
+  // Current mouse in world math coordinates
+  const mx = toMathX(screenX);
+  const my = toMathY(screenY);
+
+  if (type === 'line' || type === 'segment') {
+    // PART 15 & 16: Two endpoints A and B. Dragging A moves A while B stays fixed; dragging B moves B while A stays fixed.
+    const L0 = init.length || 6;
+    const ax0 = init.x - (L0 / 2) * Math.cos(rot);
+    const ay0 = init.y - (L0 / 2) * Math.sin(rot);
+    const bx0 = init.x + (L0 / 2) * Math.cos(rot);
+    const by0 = init.y + (L0 / 2) * Math.sin(rot);
+
+    if (hId === 'end') {
+      // Endpoint A (ax0, ay0) is the fixed anchor!
+      const vX = mx - ax0;
+      const vY = my - ay0;
+      const newLen = Math.max(0.4, Math.hypot(vX, vY));
+      const newRot = Math.atan2(vY, vX);
+      shape.length = Math.round(newLen * 100) / 100;
+      shape.rotation = newRot;
+      shape.x = ax0 + (newLen / 2) * Math.cos(newRot);
+      shape.y = ay0 + (newLen / 2) * Math.sin(newRot);
+    } else if (hId === 'start') {
+      // Endpoint B (bx0, by0) is the fixed anchor!
+      const vX = bx0 - mx;
+      const vY = by0 - my;
+      const newLen = Math.max(0.4, Math.hypot(vX, vY));
+      const newRot = Math.atan2(by0 - my, bx0 - mx);
+      shape.length = Math.round(newLen * 100) / 100;
+      shape.rotation = newRot;
+      shape.x = bx0 - (newLen / 2) * Math.cos(newRot);
+      shape.y = by0 - (newLen / 2) * Math.sin(newRot);
     }
-    case 'rectangle': {
-      if (hId === 'e' || hId === 'w') {
-        shape.width = Math.max(0.1, Math.round(((Math.abs(localX) * 2) / gridState.scale) * 100) / 100);
-      } else if (hId === 'n' || hId === 's') {
-        shape.length = Math.max(0.1, Math.round(((Math.abs(localY) * 2) / gridState.scale) * 100) / 100);
-      } else {
-        shape.width = Math.max(0.1, Math.round(((Math.abs(localX) * 2) / gridState.scale) * 100) / 100);
-        shape.length = Math.max(0.1, Math.round(((Math.abs(localY) * 2) / gridState.scale) * 100) / 100);
-      }
-      break;
+  } else if (type === 'ray') {
+    // PART 17: Origin A + Direction B
+    const ax0 = init.x;
+    const ay0 = init.y;
+    if (hId === 'dir') {
+      // Origin A stays fixed! Direction and length update
+      const vX = mx - ax0;
+      const vY = my - ay0;
+      const newLen = Math.max(0.5, Math.hypot(vX, vY));
+      const newRot = Math.atan2(vY, vX);
+      shape.length = Math.round(newLen * 100) / 100;
+      shape.rotation = newRot;
+    } else if (hId === 'origin') {
+      // Moving origin
+      shape.x = mx;
+      shape.y = my;
     }
-    case 'circle': {
-      let newRadius = shape.radius;
-      if (hId === 'e' || hId === 'w') {
-        newRadius = Math.abs(localX) / gridState.scale;
-      } else if (hId === 'n' || hId === 's') {
-        newRadius = Math.abs(localY) / gridState.scale;
-      } else {
-        newRadius = initShape.radius * ratio;
-      }
-      shape.radius = Math.max(0.1, Math.round(newRadius * 100) / 100);
-      break;
+  } else if (type === 'circle') {
+    // PART 11: Radial resize handle. Center remains FIXED.
+    const newR = Math.max(0.2, Math.hypot(localX, localY) / scale);
+    shape.radius = Math.round(newR * 100) / 100;
+  } else if (type === 'square') {
+    // PART 10: Square preserves aspect ratio 1:1.
+    // Dragging right -> anchor = left edge. Square expands right.
+    const s0 = init.side;
+    let sNew = s0;
+    let deltaLocalX = 0;
+    let deltaLocalY = 0;
+
+    if (hId === 'e') {
+      sNew = Math.max(0.2, (localX + (s0 * scale) / 2) / scale);
+      deltaLocalX = ((sNew - s0) * scale) / 2;
+    } else if (hId === 'w') {
+      sNew = Math.max(0.2, ((s0 * scale) / 2 - localX) / scale);
+      deltaLocalX = -((sNew - s0) * scale) / 2;
+    } else if (hId === 'n') {
+      sNew = Math.max(0.2, ((s0 * scale) / 2 - localY) / scale);
+      deltaLocalY = -((sNew - s0) * scale) / 2;
+    } else if (hId === 's') {
+      sNew = Math.max(0.2, (localY + (s0 * scale) / 2) / scale);
+      deltaLocalY = ((sNew - s0) * scale) / 2;
+    } else if (hId === 'ne') {
+      const sx = (localX + (s0 * scale) / 2) / scale;
+      const sy = ((s0 * scale) / 2 - localY) / scale;
+      sNew = Math.max(0.2, Math.max(sx, sy));
+      deltaLocalX = ((sNew - s0) * scale) / 2;
+      deltaLocalY = -((sNew - s0) * scale) / 2;
+    } else if (hId === 'nw') {
+      const sx = ((s0 * scale) / 2 - localX) / scale;
+      const sy = ((s0 * scale) / 2 - localY) / scale;
+      sNew = Math.max(0.2, Math.max(sx, sy));
+      deltaLocalX = -((sNew - s0) * scale) / 2;
+      deltaLocalY = -((sNew - s0) * scale) / 2;
+    } else if (hId === 'se') {
+      const sx = (localX + (s0 * scale) / 2) / scale;
+      const sy = (localY + (s0 * scale) / 2) / scale;
+      sNew = Math.max(0.2, Math.max(sx, sy));
+      deltaLocalX = ((sNew - s0) * scale) / 2;
+      deltaLocalY = ((sNew - s0) * scale) / 2;
+    } else if (hId === 'sw') {
+      const sx = ((s0 * scale) / 2 - localX) / scale;
+      const sy = (localY + (s0 * scale) / 2) / scale;
+      sNew = Math.max(0.2, Math.max(sx, sy));
+      deltaLocalX = -((sNew - s0) * scale) / 2;
+      deltaLocalY = ((sNew - s0) * scale) / 2;
     }
-    case 'ellipse': {
-      if (hId === 'e' || hId === 'w') {
-        shape.radiusX = Math.max(0.1, Math.round((Math.abs(localX) / gridState.scale) * 100) / 100);
-      } else if (hId === 'n' || hId === 's') {
-        shape.radiusY = Math.max(0.1, Math.round((Math.abs(localY) / gridState.scale) * 100) / 100);
-      } else {
-        const initLocal = gridState.resizeInitialLocal;
-        const ratioX = Math.abs(initLocal.x) > 1 ? Math.abs(localX) / Math.abs(initLocal.x) : ratio;
-        const ratioY = Math.abs(initLocal.y) > 1 ? Math.abs(localY) / Math.abs(initLocal.y) : ratio;
-        shape.radiusX = Math.max(0.1, Math.round((initShape.radiusX * ratioX) * 100) / 100);
-        shape.radiusY = Math.max(0.1, Math.round((initShape.radiusY * ratioY) * 100) / 100);
-      }
-      break;
+
+    shape.side = Math.round(sNew * 100) / 100;
+    const cosWorld = Math.cos(rot);
+    const sinWorld = Math.sin(rot);
+    const deltaSx = deltaLocalX * cosWorld - deltaLocalY * sinWorld;
+    const deltaSy = deltaLocalX * sinWorld + deltaLocalY * cosWorld;
+    shape.x = init.x + deltaSx / scale;
+    shape.y = init.y - deltaSy / scale;
+  } else if (type === 'rectangle') {
+    // PART 9: Rectangle. Dragging RIGHT -> anchor = LEFT edge. Dragging TOP -> anchor = BOTTOM edge.
+    const w0 = init.width;
+    const h0 = init.length;
+    let wNew = w0;
+    let hNew = h0;
+    let deltaLocalX = 0;
+    let deltaLocalY = 0;
+
+    if (hId === 'e') {
+      wNew = Math.max(0.2, (localX + (w0 * scale) / 2) / scale);
+      deltaLocalX = ((wNew - w0) * scale) / 2;
+    } else if (hId === 'w') {
+      wNew = Math.max(0.2, ((w0 * scale) / 2 - localX) / scale);
+      deltaLocalX = -((wNew - w0) * scale) / 2;
+    } else if (hId === 'n') {
+      hNew = Math.max(0.2, ((h0 * scale) / 2 - localY) / scale);
+      deltaLocalY = -((hNew - h0) * scale) / 2;
+    } else if (hId === 's') {
+      hNew = Math.max(0.2, (localY + (h0 * scale) / 2) / scale);
+      deltaLocalY = ((hNew - h0) * scale) / 2;
+    } else if (hId === 'ne') {
+      wNew = Math.max(0.2, (localX + (w0 * scale) / 2) / scale);
+      hNew = Math.max(0.2, ((h0 * scale) / 2 - localY) / scale);
+      deltaLocalX = ((wNew - w0) * scale) / 2;
+      deltaLocalY = -((hNew - h0) * scale) / 2;
+    } else if (hId === 'nw') {
+      wNew = Math.max(0.2, ((w0 * scale) / 2 - localX) / scale);
+      hNew = Math.max(0.2, ((h0 * scale) / 2 - localY) / scale);
+      deltaLocalX = -((wNew - w0) * scale) / 2;
+      deltaLocalY = -((hNew - h0) * scale) / 2;
+    } else if (hId === 'se') {
+      wNew = Math.max(0.2, (localX + (w0 * scale) / 2) / scale);
+      hNew = Math.max(0.2, (localY + (h0 * scale) / 2) / scale);
+      deltaLocalX = ((wNew - w0) * scale) / 2;
+      deltaLocalY = ((hNew - h0) * scale) / 2;
+    } else if (hId === 'sw') {
+      wNew = Math.max(0.2, ((w0 * scale) / 2 - localX) / scale);
+      hNew = Math.max(0.2, (localY + (h0 * scale) / 2) / scale);
+      deltaLocalX = -((wNew - w0) * scale) / 2;
+      deltaLocalY = ((hNew - h0) * scale) / 2;
     }
-    case 'triangle': {
-      const safeRatio = Math.max(0.05, ratio);
-      shape.sideA = Math.max(0.1, Math.round((initShape.sideA * safeRatio) * 100) / 100);
-      shape.sideB = Math.max(0.1, Math.round((initShape.sideB * safeRatio) * 100) / 100);
-      shape.sideC = Math.max(0.1, Math.round((initShape.sideC * safeRatio) * 100) / 100);
-      break;
+
+    shape.width = Math.round(wNew * 100) / 100;
+    shape.length = Math.round(hNew * 100) / 100;
+    const cosWorld = Math.cos(rot);
+    const sinWorld = Math.sin(rot);
+    const deltaSx = deltaLocalX * cosWorld - deltaLocalY * sinWorld;
+    const deltaSy = deltaLocalX * sinWorld + deltaLocalY * cosWorld;
+    shape.x = init.x + deltaSx / scale;
+    shape.y = init.y - deltaSy / scale;
+  } else if (type === 'ellipse') {
+    // PART 12: Ellipse axis and corner handles
+    const rx0 = init.radiusX;
+    const ry0 = init.radiusY;
+    let rxNew = rx0;
+    let ryNew = ry0;
+    let deltaLocalX = 0;
+    let deltaLocalY = 0;
+
+    if (hId === 'e') {
+      rxNew = Math.max(0.2, (localX + rx0 * scale) / (2 * scale));
+      deltaLocalX = (rxNew - rx0) * scale;
+    } else if (hId === 'w') {
+      rxNew = Math.max(0.2, (rx0 * scale - localX) / (2 * scale));
+      deltaLocalX = -(rxNew - rx0) * scale;
+    } else if (hId === 'n') {
+      ryNew = Math.max(0.2, ((ry0 * scale) - localY) / (2 * scale));
+      deltaLocalY = -(ryNew - ry0) * scale;
+    } else if (hId === 's') {
+      ryNew = Math.max(0.2, (localY + ry0 * scale) / (2 * scale));
+      deltaLocalY = (ryNew - ry0) * scale;
+    } else {
+      const initDist = Math.max(1, Math.hypot(rx0 * scale, ry0 * scale));
+      const currDist = Math.hypot(localX, localY);
+      const ratio = Math.max(0.1, currDist / initDist);
+      rxNew = rx0 * ratio;
+      ryNew = ry0 * ratio;
     }
-    case 'pentagon':
-    case 'hexagon': {
-      const safeRatio = Math.max(0.05, ratio);
-      shape.side = Math.max(0.1, Math.round((initShape.side * safeRatio) * 100) / 100);
-      break;
+
+    shape.radiusX = Math.round(rxNew * 100) / 100;
+    shape.radiusY = Math.round(ryNew * 100) / 100;
+    const cosWorld = Math.cos(rot);
+    const sinWorld = Math.sin(rot);
+    const deltaSx = deltaLocalX * cosWorld - deltaLocalY * sinWorld;
+    const deltaSy = deltaLocalX * sinWorld + deltaLocalY * cosWorld;
+    shape.x = init.x + deltaSx / scale;
+    shape.y = init.y - deltaSy / scale;
+  } else if (type === 'triangle') {
+    // PART 14: Triangle vertex dragging using actual vertices
+    const initVerts = gridState.resizeInitialTriangleVerts || getTriangleVertices(init);
+    let v0 = { ...initVerts[0] };
+    let v1 = { ...initVerts[1] };
+    let v2 = { ...initVerts[2] };
+
+    if (hId === 'v0') v0 = { x: mx, y: my };
+    else if (hId === 'v1') v1 = { x: mx, y: my };
+    else if (hId === 'v2') v2 = { x: mx, y: my };
+
+    const sideA = Math.hypot(v1.x - v2.x, v1.y - v2.y);
+    const sideB = Math.hypot(v0.x - v2.x, v0.y - v2.y);
+    const sideC = Math.hypot(v0.x - v1.x, v0.y - v1.y);
+
+    // Validate triangle inequality: sum of any two sides must exceed the third
+    if (sideA + sideB > sideC + 0.1 && sideA + sideC > sideB + 0.1 && sideB + sideC > sideA + 0.1) {
+      shape.sideA = Math.round(sideA * 100) / 100;
+      shape.sideB = Math.round(sideB * 100) / 100;
+      shape.sideC = Math.round(sideC * 100) / 100;
+      shape.x = (v0.x + v1.x + v2.x) / 3;
+      shape.y = (v0.y + v1.y + v2.y) / 3;
     }
+  } else if (type === 'hexagon') {
+    // PART 13: Hexagon vertex dragging with opposite vertex anchored
+    const vIdx = parseInt(hId.replace('v', ''), 10);
+    const initVerts = getRegularPolygonVertices(init.x, init.y, 6, init.side);
+    if (!isNaN(vIdx) && initVerts[vIdx]) {
+      const oppIdx = (vIdx + 3) % 6;
+      const oppVert = initVerts[oppIdx];
+      const dist = Math.hypot(mx - oppVert.x, my - oppVert.y);
+      const newR = Math.max(0.4, dist / 2);
+      shape.side = Math.round(newR * 100) / 100;
+      shape.x = (mx + oppVert.x) / 2;
+      shape.y = (my + oppVert.y) / 2;
+    }
+  } else if (type === 'pentagon') {
+    const dist = Math.hypot(mx - init.x, my - init.y);
+    const R = Math.max(0.4, dist);
+    const newSide = R * 2 * Math.sin(Math.PI / 5);
+    shape.side = Math.round(newSide * 100) / 100;
   }
 
   render();
@@ -1184,6 +1583,9 @@ function initPanAndZoomEvents() {
         gridState.resizeInitialLocal = { x: localX, y: localY };
         gridState.resizeInitialDist = Math.max(1, Math.hypot(localX, localY));
         gridState.resizeInitialShape = JSON.parse(JSON.stringify(activeShape));
+        if (getShapeType(activeShape) === 'triangle') {
+          gridState.resizeInitialTriangleVerts = getTriangleVertices(activeShape);
+        }
         canvas.style.cursor = hitHandle.cursor;
         return;
       }
@@ -1903,11 +2305,14 @@ function initDepthSlider() {
   // Depth slider was replaced by number input in Dimensions panel
 }
 
-// --- Floating Grid Controls (Zoom & Reset) ---
+// --- Floating Grid Controls (Zoom & Reset & Graph Visibility) ---
 function initGridControls() {
   const btnZoomIn = document.getElementById('geoZoomInBtn');
   const btnZoomOut = document.getElementById('geoZoomOutBtn');
   const btnReset = document.getElementById('geoResetViewBtn');
+  const btnGraphOn = document.getElementById('btnGraphOn');
+  const btnGraphOff = document.getElementById('btnGraphOff');
+  const btnQuickGraph = document.getElementById('geoGraphQuickBtn');
 
   if (btnZoomIn) {
     btnZoomIn.addEventListener('click', () => {
@@ -1924,6 +2329,24 @@ function initGridControls() {
   if (btnReset) {
     btnReset.addEventListener('click', () => {
       resetGridOrigin();
+    });
+  }
+
+  if (btnGraphOn) {
+    btnGraphOn.addEventListener('click', () => {
+      setGraphVisibility(true);
+    });
+  }
+
+  if (btnGraphOff) {
+    btnGraphOff.addEventListener('click', () => {
+      setGraphVisibility(false);
+    });
+  }
+
+  if (btnQuickGraph) {
+    btnQuickGraph.addEventListener('click', () => {
+      setGraphVisibility(!gridState.showGraph);
     });
   }
 }
@@ -2104,6 +2527,9 @@ function getCachedNumberSprite(num, colorHex) {
 
 function updateDynamicThreeGrid(force = false) {
   if (!threeCamera || !threeControls || !threeDynamicGridGroup || !threeAxesGroup) return;
+
+  threeDynamicGridGroup.visible = !!gridState.showGraph;
+  threeAxesGroup.visible = !!gridState.showGraph;
 
   const camDist = threeCamera.position.distanceTo(threeControls.target);
   const target = threeControls.target;
@@ -3692,19 +4118,21 @@ function rebuildThreeShapes() {
     const isDark = currentTheme === 'dark';
     const isFlat = is2DShape && solidType === 'flat';
 
-    let meshColor = shape.color;
-    if (isDark) {
-      if (meshColor === '#2563eb') meshColor = '#0284c7';
-      else if (meshColor === '#059669') meshColor = '#10b981';
-      else if (meshColor === '#ea580c' || meshColor === '#d97706') meshColor = '#f59e0b';
-      else if (meshColor === '#dc2626' || meshColor === '#e11d48') meshColor = '#f43f5e';
-      else if (meshColor === '#9333ea' || meshColor === '#8b5cf6') meshColor = '#a855f7';
+    let meshColor = '';
+    let edgeColor = '';
+    if (shape.hasCustomColor) {
+      meshColor = shape.customColor;
+      edgeColor = isActive ? (isDark ? '#3bb8db' : '#0284c7') : shape.customColor;
+    } else {
+      // Default mathematical graphics color: Light = black (#111111), Dark = white (#f8fafc)
+      meshColor = isDark ? '#f8fafc' : '#111111';
+      edgeColor = isActive ? (isDark ? '#3bb8db' : '#0284c7') : (isDark ? '#f8fafc' : '#111111');
     }
 
     const mat = new THREE.MeshStandardMaterial({
-      color: meshColor,
+      color: new THREE.Color(meshColor),
       transparent: true,
-      opacity: isActive ? (isFlat ? 0.82 : 0.90) : (isFlat ? 0.60 : 0.70),
+      opacity: isActive ? (isFlat ? 0.85 : 0.90) : (isFlat ? 0.65 : 0.72),
       roughness: isFlat ? 0.35 : 0.20,
       metalness: isFlat ? 0.08 : 0.22,
       side: THREE.DoubleSide
@@ -3727,12 +4155,11 @@ function rebuildThreeShapes() {
 
     // Edges geometry highlight line
     const edgesGeom = new THREE.EdgesGeometry(geom, isFlat ? 10 : 22);
-    const edgeColor = isActive ? (isDark ? 0x3bb8db : 0x0284c7) : (shape.strokeColor || shape.color);
     const edgeMat = new THREE.LineBasicMaterial({
-      color: edgeColor,
+      color: new THREE.Color(edgeColor),
       linewidth: isActive ? 3 : 1.5,
       transparent: true,
-      opacity: isActive ? 1.0 : (isDark ? 0.85 : 0.75)
+      opacity: isActive ? 1.0 : (isDark ? 0.90 : 0.85)
     });
     const edgeLine = new THREE.LineSegments(edgesGeom, edgeMat);
     mesh.add(edgeLine);
@@ -3998,11 +4425,27 @@ function get2DShapePolygonVertices(shape) {
   }
 }
 
+function distToSegment(p, v, w) {
+  const l2 = (v.x - w.x) * (v.x - w.x) + (v.y - w.y) * (v.y - w.y);
+  if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+  let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+}
+
+// Precise Shape Hitboxes (PARTS 20, 21, 22)
+// Hit testing follows actual geometry with ~8-10px user tolerance
 function isPointInsideShape(shape, mx, my) {
-  let dx = mx - shape.x;
-  let dy = my - shape.y;
+  const tolerance = Math.max(0.2, 10 / gridState.scale);
+  const shapeType = getShapeType(shape);
+
+  if (shapeType === 'point') {
+    return Math.hypot(mx - shape.x, my - shape.y) <= Math.max(0.35, (shape.radius || 0.35) + tolerance);
+  }
 
   // Account for shape rotation around center
+  let dx = mx - shape.x;
+  let dy = my - shape.y;
   if (shape.rotation) {
     const cos = Math.cos(-shape.rotation);
     const sin = Math.sin(-shape.rotation);
@@ -4013,54 +4456,82 @@ function isPointInsideShape(shape, mx, my) {
   }
   const localMx = shape.x + dx;
   const localMy = shape.y + dy;
-  const shapeType = getShapeType(shape);
 
-  const polyVerts = get2DShapePolygonVertices(shape);
-  if (polyVerts) {
-    return isPointInPolygon(localMx, localMy, polyVerts);
+  // Segment: distance from point to line segment <= tolerance
+  if (shapeType === 'segment') {
+    const len = shape.length || 6;
+    const clampedX = Math.max(-len / 2, Math.min(len / 2, dx));
+    return Math.hypot(dx - clampedX, dy) <= tolerance;
   }
 
+  // Line: thin tolerance around line path
+  if (shapeType === 'line') {
+    const len = shape.length || 12;
+    const clampedX = Math.max(-len / 2 - tolerance, Math.min(len / 2 + tolerance, dx));
+    return Math.abs(dy) <= tolerance && Math.abs(dx) <= (len / 2 + tolerance);
+  }
+
+  // Ray: origin (0,0) towards (+len, 0)
+  if (shapeType === 'ray') {
+    const len = shape.length || 7;
+    const clampedX = Math.max(0, Math.min(len, dx));
+    return Math.hypot(dx - clampedX, dy) <= tolerance;
+  }
+
+  if (shapeType === 'circle') {
+    return Math.hypot(dx, dy) <= (shape.radius + tolerance);
+  }
+
+  if (shapeType === 'semicircle') {
+    const r = (shape.radius || 3) + tolerance;
+    return Math.hypot(dx, dy) <= r && dy >= -tolerance;
+  }
+
+  if (shapeType === 'ellipse') {
+    const rx = Math.max(0.01, shape.radiusX);
+    const ry = Math.max(0.01, shape.radiusY);
+    const normDist = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
+    const tolFactor = 1 + tolerance / Math.min(rx, ry);
+    return normDist <= tolFactor * tolFactor;
+  }
+
+  if (shapeType === 'square') {
+    const half = shape.side / 2;
+    return Math.abs(dx) <= (half + tolerance) && Math.abs(dy) <= (half + tolerance);
+  }
+
+  if (shapeType === 'rectangle') {
+    const halfW = shape.width / 2;
+    const halfL = shape.length / 2;
+    return Math.abs(dx) <= (halfW + tolerance) && Math.abs(dy) <= (halfL + tolerance);
+  }
+
+  const polyVerts = get2DShapePolygonVertices(shape);
+  if (polyVerts && polyVerts.length > 0) {
+    if (isPointInPolygon(localMx, localMy, polyVerts)) return true;
+    for (let i = 0; i < polyVerts.length; i++) {
+      const p1 = polyVerts[i];
+      const p2 = polyVerts[(i + 1) % polyVerts.length];
+      if (distToSegment({ x: localMx, y: localMy }, p1, p2) <= tolerance) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // 3D / other shapes
   switch (shapeType) {
-    case 'square': {
-      const half = shape.side / 2;
-      return Math.abs(dx) <= half && Math.abs(dy) <= half;
-    }
-    case 'rectangle': {
-      const halfW = shape.width / 2;
-      const halfL = shape.length / 2;
-      return Math.abs(dx) <= halfW && Math.abs(dy) <= halfL;
-    }
-    case 'circle': {
-      return Math.hypot(dx, dy) <= shape.radius;
-    }
-    case 'semicircle': {
-      return Math.hypot(dx, dy) <= (shape.radius || 3) && dy >= 0;
-    }
-    case 'ellipse': {
-      const rx = Math.max(0.01, shape.radiusX);
-      const ry = Math.max(0.01, shape.radiusY);
-      return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1;
-    }
-    case 'point': {
-      return Math.hypot(dx, dy) <= Math.max(0.6, (shape.radius || 0.35) * 1.5);
-    }
-    case 'segment':
-    case 'line':
-    case 'ray': {
-      const len = shape.length || 6;
-      return Math.abs(dx) <= len / 2 && Math.abs(dy) <= 0.6;
-    }
     case 'angle': {
-      return Math.hypot(dx, dy) <= (shape.armLength || 5) && (Math.abs(dy) <= 0.6 || Math.abs(dx) <= (shape.armLength || 5));
+      return Math.hypot(dx, dy) <= ((shape.armLength || 5) + tolerance) && (Math.abs(dy) <= tolerance || Math.abs(dx) <= (shape.armLength || 5));
     }
     case 'cube': {
       const half = (shape.side || 3.5) / 2;
-      return Math.abs(dx) <= half && Math.abs(dy) <= half;
+      return Math.abs(dx) <= (half + tolerance) && Math.abs(dy) <= (half + tolerance);
     }
     case 'cuboid': {
       const halfW = (shape.width || 4.5) / 2;
       const halfD = (shape.depth || 3.5) / 2;
-      return Math.abs(dx) <= halfW && Math.abs(dy) <= halfD;
+      return Math.abs(dx) <= (halfW + tolerance) && Math.abs(dy) <= (halfD + tolerance);
     }
     case 'triangular_prism': {
       const verts = getEquilateralTriangleVertices({ ...shape, side: shape.side || 4 });
@@ -4069,17 +4540,17 @@ function isPointInsideShape(shape, mx, my) {
     case 'cylinder':
     case 'sphere':
     case 'cone': {
-      return Math.hypot(dx, dy) <= (shape.radius || 2.5);
+      return Math.hypot(dx, dy) <= ((shape.radius || 2.5) + tolerance);
     }
     case 'pyramid': {
       const half = (shape.baseSize || 4) / 2;
-      return Math.abs(dx) <= half && Math.abs(dy) <= half;
+      return Math.abs(dx) <= (half + tolerance) && Math.abs(dy) <= (half + tolerance);
     }
     case 'tetrahedron': {
-      return Math.hypot(dx, dy) <= (shape.radius || 2.8);
+      return Math.hypot(dx, dy) <= ((shape.radius || 2.8) + tolerance);
     }
     case 'torus': {
-      return Math.hypot(dx, dy) <= (shape.radius || 3) + (shape.tube || 0.9);
+      return Math.hypot(dx, dy) <= ((shape.radius || 3) + (shape.tube || 0.9) + tolerance);
     }
     default:
       return false;
@@ -4180,6 +4651,7 @@ function render() {
 // Draw Desmos-style Grid Lines, Axis Lines & Tick Labels
 function drawInfiniteGrid(width, height) {
   const isDark = currentTheme === 'dark';
+  const theme = GRAPH_THEME[currentTheme];
   const xMin = toMathX(0);
   const xMax = toMathX(width);
   const yMin = toMathY(height);
@@ -4187,8 +4659,14 @@ function drawInfiniteGrid(width, height) {
 
   // Background clear/fill to ensure no white flash or bleed
   ctx.save();
-  ctx.fillStyle = isDark ? '#020618' : '#ffffff';
+  ctx.fillStyle = theme.background;
   ctx.fillRect(0, 0, width, height);
+
+  // PART 24, 25, 26: If Graph visibility is toggled OFF, skip drawing grid lines, axes, ticks and numbers
+  if (!gridState.showGraph) {
+    ctx.restore();
+    return;
+  }
 
   // Determine nice grid unit step (1, 2, 5 * 10^k)
   const targetPixels = 80;
@@ -4207,7 +4685,7 @@ function drawInfiniteGrid(width, height) {
 
   // --- Minor Grid Lines ---
   ctx.lineWidth = 1;
-  ctx.strokeStyle = isDark ? 'rgba(59, 184, 219, 0.08)' : 'rgba(15, 23, 42, 0.06)';
+  ctx.strokeStyle = theme.gridMinor;
 
   ctx.beginPath();
   const startMinorX = Math.floor(xMin / minorStep) * minorStep;
@@ -4225,9 +4703,9 @@ function drawInfiniteGrid(width, height) {
   }
   ctx.stroke();
 
-  // --- Major Grid Lines (Darker lines every 5 units / major steps) ---
+  // --- Major Grid Lines ---
   ctx.lineWidth = 1.2;
-  ctx.strokeStyle = isDark ? 'rgba(59, 184, 219, 0.22)' : 'rgba(15, 23, 42, 0.14)';
+  ctx.strokeStyle = theme.gridMajor;
 
   ctx.beginPath();
   const startMajorX = Math.floor(xMin / majorStep) * majorStep;
@@ -4249,8 +4727,8 @@ function drawInfiniteGrid(width, height) {
   const screenOriginX = Math.round(gridState.originX) + 0.5;
   const screenOriginY = Math.round(gridState.originY) + 0.5;
 
-  ctx.lineWidth = isDark ? 1.75 : 2;
-  ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : '#334155';
+  ctx.lineWidth = 1.75;
+  ctx.strokeStyle = theme.axis;
 
   ctx.beginPath();
   // X axis (horizontal line y=0)
@@ -4262,8 +4740,9 @@ function drawInfiniteGrid(width, height) {
   ctx.stroke();
 
   // --- Axis Tick Labels (Desmos-like dynamic numbers) ---
+  // PART 1: Light = black (#111111), Dark = white (#f8fafc)
   ctx.font = '500 11px "Inter", system-ui, sans-serif';
-  ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.68)' : '#64748b';
+  ctx.fillStyle = theme.label;
 
   // Determine label position pinning if axes are off screen
   const axisLabelPosY = Math.max(22, Math.min(height - 10, screenOriginY + 16));
@@ -4284,7 +4763,7 @@ function drawInfiniteGrid(width, height) {
       ctx.beginPath();
       ctx.moveTo(sx, screenOriginY - 4);
       ctx.lineTo(sx, screenOriginY + 4);
-      ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : '#334155';
+      ctx.strokeStyle = theme.tick;
       ctx.lineWidth = 1.5;
       ctx.stroke();
     }
@@ -4306,7 +4785,7 @@ function drawInfiniteGrid(width, height) {
       ctx.beginPath();
       ctx.moveTo(screenOriginX - 4, sy);
       ctx.lineTo(screenOriginX + 4, sy);
-      ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : '#334155';
+      ctx.strokeStyle = theme.tick;
       ctx.lineWidth = 1.5;
       ctx.stroke();
     }
@@ -4350,37 +4829,30 @@ function drawShape(shape, isActive) {
   }
 
   const isDark = currentTheme === 'dark';
+  const theme = GRAPH_THEME[currentTheme];
 
-  // Active shape selection glow/outline
-  if (isActive) {
-    ctx.shadowColor = isDark ? 'rgba(0, 240, 255, 0.65)' : 'rgba(37, 99, 235, 0.55)';
-    ctx.shadowBlur = isDark ? 18 : 14;
+  // PART 1 & 2 & 5: Determine shape stroke and fill colors
+  // If user selected a custom color, it is preserved across themes.
+  // Otherwise, default to Black in Light Mode (#111111) and White in Dark Mode (#f8fafc).
+  let strokeColor = '';
+  let fillColor = '';
+
+  if (shape.hasCustomColor) {
+    strokeColor = shape.customColor;
+    fillColor = hexToRgba(shape.customColor, 0.22);
+  } else {
+    strokeColor = theme.shapeDefaultStroke;
+    fillColor = theme.shapeDefaultFill;
   }
 
-  // Semantic color contrast in dark mode
-  let strokeColor = shape.strokeColor;
-  let fillColor = shape.fillColor;
-  if (isDark) {
-    if (shape.strokeColor === '#2563eb' || shape.color === '#2563eb') {
-      strokeColor = '#38bdf8';
-      fillColor = 'rgba(56, 189, 248, 0.22)';
-    } else if (shape.strokeColor === '#059669' || shape.color === '#059669') {
-      strokeColor = '#34d399';
-      fillColor = 'rgba(52, 211, 153, 0.22)';
-    } else if (shape.strokeColor === '#ea580c' || shape.strokeColor === '#d97706') {
-      strokeColor = '#facc15';
-      fillColor = 'rgba(250, 204, 21, 0.22)';
-    } else if (shape.strokeColor === '#dc2626' || shape.strokeColor === '#e11d48') {
-      strokeColor = '#fb7185';
-      fillColor = 'rgba(251, 113, 133, 0.22)';
-    } else if (shape.strokeColor === '#9333ea' || shape.strokeColor === '#8b5cf6') {
-      strokeColor = '#c084fc';
-      fillColor = 'rgba(192, 132, 252, 0.22)';
-    }
+  // Active shape selection glow
+  if (isActive) {
+    ctx.shadowColor = isDark ? 'rgba(59, 184, 219, 0.65)' : 'rgba(2, 132, 199, 0.55)';
+    ctx.shadowBlur = isDark ? 16 : 12;
   }
 
   ctx.fillStyle = fillColor;
-  ctx.strokeStyle = isActive ? (isDark ? '#3BB8DB' : '#0284c7') : strokeColor;
+  ctx.strokeStyle = isActive ? theme.selection : strokeColor;
   ctx.lineWidth = isActive ? 2.5 : 2;
 
   let labelText = '';
@@ -4543,9 +5015,9 @@ function drawShape(shape, isActive) {
       const r = Math.max(4, (shape.radius || 0.35) * gridState.scale);
       ctx.beginPath();
       ctx.arc(sx, sy, r, 0, Math.PI * 2);
-      ctx.fillStyle = isActive ? '#2563eb' : shape.color;
+      ctx.fillStyle = isActive ? theme.selection : strokeColor;
       ctx.fill();
-      ctx.strokeStyle = '#ffffff';
+      ctx.strokeStyle = isDark ? '#020618' : '#ffffff';
       ctx.lineWidth = 2;
       ctx.stroke();
       labelText = `(${shape.x.toFixed(1)}, ${shape.y.toFixed(1)})`;
@@ -4560,7 +5032,7 @@ function drawShape(shape, isActive) {
       ctx.beginPath();
       ctx.arc(sx - len / 2, sy, 4, 0, Math.PI * 2);
       ctx.arc(sx + len / 2, sy, 4, 0, Math.PI * 2);
-      ctx.fillStyle = shape.strokeColor;
+      ctx.fillStyle = strokeColor;
       ctx.fill();
       labelText = `L = ${shape.length || 6}`;
       break;
@@ -4581,7 +5053,7 @@ function drawShape(shape, isActive) {
       ctx.lineTo(sx + len / 2 - arr, sy - arr / 2);
       ctx.lineTo(sx + len / 2 - arr, sy + arr / 2);
       ctx.closePath();
-      ctx.fillStyle = shape.strokeColor;
+      ctx.fillStyle = strokeColor;
       ctx.fill();
       labelText = `Line`;
       break;
@@ -4594,7 +5066,7 @@ function drawShape(shape, isActive) {
       ctx.stroke();
       ctx.beginPath();
       ctx.arc(sx, sy, 4, 0, Math.PI * 2);
-      ctx.fillStyle = shape.strokeColor;
+      ctx.fillStyle = strokeColor;
       ctx.fill();
       const arr = 8;
       ctx.beginPath();
@@ -4602,6 +5074,7 @@ function drawShape(shape, isActive) {
       ctx.lineTo(sx + len - arr, sy - arr / 2);
       ctx.lineTo(sx + len - arr, sy + arr / 2);
       ctx.closePath();
+      ctx.fillStyle = strokeColor;
       ctx.fill();
       labelText = `Ray`;
       break;
@@ -4616,7 +5089,7 @@ function drawShape(shape, isActive) {
       ctx.stroke();
       ctx.beginPath();
       ctx.arc(sx, sy, 22, -rad, 0);
-      ctx.strokeStyle = '#2563eb';
+      ctx.strokeStyle = isActive ? theme.selection : (isDark ? '#38bdf8' : '#2563eb');
       ctx.stroke();
       labelText = `${shape.deg || 45}°`;
       break;
@@ -4717,7 +5190,7 @@ function drawShape(shape, isActive) {
   ctx.shadowBlur = 0;
   ctx.beginPath();
   ctx.arc(sx, sy, 3.5, 0, Math.PI * 2);
-  ctx.fillStyle = isActive ? (isDark ? '#3BB8DB' : '#0284c7') : (isDark ? '#3BB8DB' : shape.color);
+  ctx.fillStyle = isActive ? theme.selection : strokeColor;
   ctx.fill();
   ctx.strokeStyle = isDark ? '#020618' : '#ffffff';
   ctx.lineWidth = 1.5;
@@ -4728,7 +5201,7 @@ function drawShape(shape, isActive) {
     drawDimensionBadge(sx, sy - 8, labelText, shape.color);
   }
 
-  // If active, draw clean selection indicator corners & rotation handle
+  // If active, draw clean shape-aware selection indicators
   if (isActive) {
     drawActiveSelectionIndicators(shape, sx, sy);
   }
@@ -4781,69 +5254,246 @@ function drawDimensionBadge(x, y, text, themeColor) {
   ctx.fill();
   ctx.stroke();
 
-  // Text
+  // Text: Light Mode = Black (#111111), Dark Mode = White (#ffffff)
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
-  ctx.fillStyle = isDark ? '#ffffff' : '#1e293b';
+  ctx.fillStyle = isDark ? '#ffffff' : '#111111';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, x, y);
   ctx.restore();
 }
 
-// Subtle dashed selection boundary, rotation handle, and resize handles for active shape
+// Shape-Aware Selection Visuals (PART 23)
+// Replaces generic rectangular box with exact shape-specific boundaries
 function drawActiveSelectionIndicators(shape, sx, sy) {
   const isDark = currentTheme === 'dark';
+  const theme = GRAPH_THEME[currentTheme];
+  const selectColor = theme.selection;
+  const type = getShapeType(shape);
+
   ctx.save();
-  ctx.strokeStyle = isDark ? '#3BB8DB' : '#0284c7';
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = selectColor;
+  ctx.lineWidth = 1.6;
   ctx.setLineDash([4, 4]);
 
-  const { halfW, halfH } = getShapeHalfExtents(shape);
+  const handles = getShapeResizeHandles(shape);
+  const handleSize = 7.5;
+  const halfS = handleSize / 2;
 
-  // 1. Dashed bounding box
+  // Point: subtle highlight ring around point, no bounding box
+  if (type === 'point') {
+    const r = Math.max(9, (shape.radius || 0.35) * gridState.scale + 6);
+    ctx.beginPath();
+    ctx.arc(sx, sy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  // Segment & Line: highlight line itself + 2 endpoint knobs (A and B)
+  if (type === 'line' || type === 'segment') {
+    ctx.setLineDash([]);
+    handles.forEach(h => {
+      const hx = sx + h.x;
+      const hy = sy + h.y;
+      ctx.beginPath();
+      ctx.arc(hx, hy, 5, 0, Math.PI * 2);
+      ctx.fillStyle = isDark ? '#020618' : '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = selectColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(hx, hy, 2, 0, Math.PI * 2);
+      ctx.fillStyle = selectColor;
+      ctx.fill();
+    });
+    ctx.restore();
+    return;
+  }
+
+  // Ray: highlight origin + direction knob
+  if (type === 'ray') {
+    ctx.setLineDash([]);
+    handles.forEach(h => {
+      const hx = sx + h.x;
+      const hy = sy + h.y;
+      ctx.beginPath();
+      ctx.arc(hx, hy, 5, 0, Math.PI * 2);
+      ctx.fillStyle = isDark ? '#020618' : '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = selectColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(hx, hy, 2, 0, Math.PI * 2);
+      ctx.fillStyle = selectColor;
+      ctx.fill();
+    });
+    ctx.restore();
+    return;
+  }
+
+  // Circle: dashed circle around circle + radial handle knob
+  if (type === 'circle') {
+    const r = shape.radius * gridState.scale;
+    ctx.beginPath();
+    ctx.arc(sx, sy, r + 4, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    handles.forEach(h => {
+      const hx = sx + h.x + 4;
+      const hy = sy + h.y;
+      ctx.beginPath();
+      ctx.arc(hx, hy, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = isDark ? selectColor : '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = selectColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+    ctx.restore();
+    return;
+  }
+
+  // Ellipse: dashed ellipse + 8 handles
+  if (type === 'ellipse') {
+    const rx = shape.radiusX * gridState.scale + 4;
+    const ry = shape.radiusY * gridState.scale + 4;
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    handles.forEach(h => {
+      const hx = sx + h.x;
+      const hy = sy + h.y;
+      ctx.beginPath();
+      ctx.rect(hx - halfS, hy - halfS, handleSize, handleSize);
+      ctx.fillStyle = isDark ? selectColor : '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = isDark ? '#020618' : selectColor;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+    ctx.restore();
+    return;
+  }
+
+  // Triangle: dashed triangle around vertices + 3 vertex handles
+  if (type === 'triangle') {
+    const verts = getTriangleVertices(shape);
+    ctx.beginPath();
+    for (let i = 0; i < verts.length; i++) {
+      const vx = toScreenX(verts[i].x);
+      const vy = toScreenY(verts[i].y);
+      if (i === 0) ctx.moveTo(vx, vy);
+      else ctx.lineTo(vx, vy);
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    handles.forEach(h => {
+      const hx = sx + h.x;
+      const hy = sy + h.y;
+      ctx.beginPath();
+      ctx.arc(hx, hy, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = isDark ? selectColor : '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = isDark ? '#020618' : selectColor;
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+    });
+    ctx.restore();
+    return;
+  }
+
+  // Regular Polygons: dashed polygon around vertices + vertex handles
+  if (type === 'pentagon' || type === 'hexagon' || type === 'regular_polygon') {
+    const n = type === 'pentagon' ? 5 : (type === 'hexagon' ? 6 : (shape.sides || 8));
+    const verts = getRegularPolygonVertices(shape.x, shape.y, n, shape.side);
+    ctx.beginPath();
+    for (let i = 0; i < verts.length; i++) {
+      const vx = toScreenX(verts[i].x);
+      const vy = toScreenY(verts[i].y);
+      if (i === 0) ctx.moveTo(vx, vy);
+      else ctx.lineTo(vx, vy);
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    handles.forEach(h => {
+      const hx = sx + h.x;
+      const hy = sy + h.y;
+      ctx.beginPath();
+      ctx.arc(hx, hy, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = isDark ? selectColor : '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = isDark ? '#020618' : selectColor;
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+    });
+    ctx.restore();
+    return;
+  }
+
+  // Rectangle / Square / Polygons: dashed boundary box + rotation handle + 8 resize handles
+  let halfW = 20;
+  let halfH = 20;
+  if (type === 'square') {
+    halfW = (shape.side * gridState.scale) / 2 + 4;
+    halfH = halfW;
+  } else if (type === 'rectangle') {
+    halfW = (shape.width * gridState.scale) / 2 + 4;
+    halfH = (shape.length * gridState.scale) / 2 + 4;
+  } else {
+    const ext = getShapeHalfExtents(shape);
+    halfW = ext.halfW;
+    halfH = ext.halfH;
+  }
+
   ctx.beginPath();
-  drawRoundedRect(ctx, sx - halfW, sy - halfH, halfW * 2, halfH * 2, 6);
+  drawRoundedRect(ctx, sx - halfW, sy - halfH, halfW * 2, halfH * 2, 4);
   ctx.stroke();
 
-  // 2. Rotation handle stem & handle knob
-  const stem = 24;
+  // Rotation handle stem & knob
+  const stem = 22;
   ctx.beginPath();
   ctx.setLineDash([]);
   ctx.moveTo(sx, sy - halfH);
   ctx.lineTo(sx, sy - halfH - stem);
-  ctx.strokeStyle = isDark ? '#3BB8DB' : '#0284c7';
+  ctx.strokeStyle = selectColor;
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Handle circle (rotation)
   ctx.beginPath();
-  ctx.arc(sx, sy - halfH - stem, 6, 0, Math.PI * 2);
+  ctx.arc(sx, sy - halfH - stem, 5.5, 0, Math.PI * 2);
   ctx.fillStyle = isDark ? '#020618' : '#ffffff';
   ctx.fill();
-  ctx.strokeStyle = isDark ? '#3BB8DB' : '#0284c7';
+  ctx.strokeStyle = selectColor;
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Handle center dot
   ctx.beginPath();
   ctx.arc(sx, sy - halfH - stem, 2, 0, Math.PI * 2);
-  ctx.fillStyle = isDark ? '#3BB8DB' : '#0284c7';
+  ctx.fillStyle = selectColor;
   ctx.fill();
 
-  // 3. Resize handles (8 square handles on corners and edges)
-  const handles = getShapeResizeHandles(shape);
-  const handleSize = 7.5;
-  const halfS = handleSize / 2;
-  ctx.setLineDash([]);
+  // Resize handles
   handles.forEach(h => {
     const hx = sx + h.x;
     const hy = sy + h.y;
     ctx.beginPath();
     ctx.rect(hx - halfS, hy - halfS, handleSize, handleSize);
-    ctx.fillStyle = isDark ? '#3BB8DB' : '#ffffff';
+    ctx.fillStyle = isDark ? selectColor : '#ffffff';
     ctx.fill();
-    ctx.strokeStyle = isDark ? '#020618' : '#0284c7';
+    ctx.strokeStyle = isDark ? '#020618' : selectColor;
     ctx.lineWidth = 1.5;
     ctx.stroke();
   });
