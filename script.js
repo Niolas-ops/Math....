@@ -550,7 +550,11 @@ const INSTANCE_PALETTES = [
   '#4f46e5'  // Indigo
 ];
 
+const rgbaCache = new Map();
 function hexToRgba(hex, alpha) {
+  const key = `${hex}_${alpha}`;
+  let cached = rgbaCache.get(key);
+  if (cached) return cached;
   let c = hex.replace('#', '');
   if (c.length === 3) {
     c = c.split('').map(x => x + x).join('');
@@ -559,7 +563,9 @@ function hexToRgba(hex, alpha) {
   const r = (num >> 16) & 255;
   const g = (num >> 8) & 255;
   const b = num & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  cached = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  rgbaCache.set(key, cached);
+  return cached;
 }
 
 function getShapeColorForInstance(type, instanceIndex) {
@@ -631,7 +637,13 @@ let lastGridDist = -1;
 let lastGridTarget = null;
 let lastMaxSceneY = -999;
 let lastMinSceneY = 999;
+let threeNeedsRender = true;
+let threePointerMoveHandler = null;
+let threePointerUpHandler = null;
 const numberSpriteCache = new Map();
+const axisLabelTextureCache = new Map();
+const gizmoPillTextureCache = new Map();
+const shapeLabelTextureCache = new Map();
 
 // Infinite Grid Coordinate State (Desmos-like)
 const gridState = {
@@ -745,6 +757,7 @@ function setGraphVisibility(visible) {
   if (threeAxesGroup) {
     threeAxesGroup.visible = gridState.showGraph;
   }
+  threeNeedsRender = true;
 
   if (currentViewMode === '2d' && ctx && canvas) {
     render();
@@ -862,9 +875,9 @@ function applyTheme(theme, save = true) {
       threeSceneSecondaryLight.color.setHex(isDark ? 0x3bb8db : 0xffffff);
       threeSceneSecondaryLight.intensity = isDark ? 0.45 : 0.25;
     }
-    numberSpriteCache.clear();
     updateDynamicThreeGrid(true);
     rebuildThreeShapes();
+    threeNeedsRender = true;
   }
 
   // If 2D canvas is active, re-render with active theme
@@ -1166,7 +1179,7 @@ function getResizeHandleAtScreenCoords(shape, screenX, screenY, hitRadius = 10) 
 
 // ANCHOR-BASED RESIZING (PARTS 7-19)
 // Dragging one handle moves only that boundary/vertex, keeping the opposite anchor completely fixed!
-function applyShapeResize(shape, screenX, screenY) {
+function applyShapeResize(shape, screenX, screenY, skipRender = false) {
   if (!shape || !gridState.resizeHandleId) return;
   const hId = gridState.resizeHandleId;
   const init = gridState.resizeInitialShape;
@@ -1424,9 +1437,11 @@ function applyShapeResize(shape, screenX, screenY) {
     shape.side = Math.round(newSide * 100) / 100;
   }
 
-  render();
-  updateDimensionsPanelValues();
-  renderPropertiesPanel();
+  if (!skipRender) {
+    render();
+    updateDimensionsPanelValues();
+    renderPropertiesPanel();
+  }
 }
 
 function getRotationHandleScreenCoords(shape) {
@@ -1480,13 +1495,70 @@ function getShapeBoundingRadius(shape) {
   }
 }
 
-// --- Canvas Setup & Resizing ---
+// --- Canvas Setup, Resolution & Coalesced Frame Scheduling ---
+let cachedCanvasRect = null;
+let cachedClientWidth = 0;
+let cachedClientHeight = 0;
+let cachedDpr = 1;
+let resizeRafId = null;
+let interactionRafId = null;
+let pendingRender2D = false;
+let pendingUpdateDims = false;
+let pendingUpdateProps = false;
+let lastCanvasCursor = '';
+let cachedCoordsReadoutEl = null;
+let lastCoordsReadoutText = '';
+
+function getCanvasRect() {
+  if (!canvas) return { left: 0, top: 0, width: 0, height: 0 };
+  if (!cachedCanvasRect || cachedCanvasRect.width === 0) {
+    cachedCanvasRect = canvas.getBoundingClientRect();
+  }
+  return cachedCanvasRect;
+}
+
+function setCanvasCursor(cursorVal) {
+  if (!canvas || lastCanvasCursor === cursorVal) return;
+  lastCanvasCursor = cursorVal;
+  canvas.style.cursor = cursorVal;
+}
+
+function flushInteractionFrame() {
+  if (interactionRafId !== null) {
+    cancelAnimationFrame(interactionRafId);
+    interactionRafId = null;
+  }
+  const doRender = pendingRender2D;
+  const doDims = pendingUpdateDims;
+  const doProps = pendingUpdateProps;
+  pendingRender2D = false;
+  pendingUpdateDims = false;
+  pendingUpdateProps = false;
+
+  if (doRender) render();
+  if (doDims) updateDimensionsPanelValues();
+  if (doProps) renderPropertiesPanel();
+}
+
+function scheduleInteractionFrame(needRender = true, needDims = false, needProps = false) {
+  if (needRender) pendingRender2D = true;
+  if (needDims) pendingUpdateDims = true;
+  if (needProps) pendingUpdateProps = true;
+
+  if (interactionRafId === null) {
+    interactionRafId = requestAnimationFrame(() => {
+      interactionRafId = null;
+      flushInteractionFrame();
+    });
+  }
+}
+
 function initCanvas() {
   canvas = document.getElementById('geometryCanvas');
   if (!canvas) return;
-  ctx = canvas.getContext('2d');
+  ctx = canvas.getContext('2d', { alpha: false });
   resizeCanvas();
-  window.addEventListener('resize', onWindowResize);
+  window.addEventListener('resize', onWindowResize, { passive: true });
 }
 
 function resizeCanvas() {
@@ -1494,15 +1566,26 @@ function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const width = window.innerWidth;
   const height = window.innerHeight;
+  const targetW = Math.floor(width * dpr);
+  const targetH = Math.floor(height * dpr);
 
-  canvas.width = Math.floor(width * dpr);
-  canvas.height = Math.floor(height * dpr);
-  canvas.style.width = `${width}px`;
-  canvas.style.height = `${height}px`;
+  cachedDpr = dpr;
+  cachedClientWidth = width;
+  cachedClientHeight = height;
+
+  // Only reallocate GPU canvas backing buffer if physical pixel dimensions changed
+  if (canvas.width !== targetW || canvas.height !== targetH) {
+    canvas.width = targetW;
+    canvas.height = targetH;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+  }
 
   if (ctx) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
+
+  cachedCanvasRect = canvas.getBoundingClientRect();
 
   // Initialize origin to screen center if not set yet
   if (gridState.originX === 0 && gridState.originY === 0) {
@@ -1512,20 +1595,35 @@ function resizeCanvas() {
 }
 
 function onWindowResize() {
-  const oldWidth = canvas ? canvas.clientWidth : window.innerWidth;
-  const oldHeight = canvas ? canvas.clientHeight : window.innerHeight;
-  resizeCanvas();
-  const newWidth = window.innerWidth;
-  const newHeight = window.innerHeight;
+  if (resizeRafId !== null) return;
+  const oldWidth = cachedClientWidth || (canvas ? canvas.clientWidth : window.innerWidth);
+  const oldHeight = cachedClientHeight || (canvas ? canvas.clientHeight : window.innerHeight);
 
-  // Preserve relative origin position on resize
-  if (oldWidth > 0 && oldHeight > 0) {
-    const relX = gridState.originX / oldWidth;
-    const relY = gridState.originY / oldHeight;
-    gridState.originX = relX * newWidth;
-    gridState.originY = relY * newHeight;
-  }
-  render();
+  resizeRafId = requestAnimationFrame(() => {
+    resizeRafId = null;
+    const newWidth = window.innerWidth;
+    const newHeight = window.innerHeight;
+    resizeCanvas();
+
+    // Preserve relative origin position on resize
+    if (oldWidth > 0 && oldHeight > 0) {
+      const relX = gridState.originX / oldWidth;
+      const relY = gridState.originY / oldHeight;
+      gridState.originX = relX * newWidth;
+      gridState.originY = relY * newHeight;
+    }
+
+    if (threeRenderer && threeCamera) {
+      threeCamera.aspect = newWidth / Math.max(1, newHeight);
+      threeCamera.updateProjectionMatrix();
+      threeRenderer.setSize(newWidth, newHeight);
+      threeNeedsRender = true;
+    }
+
+    if (currentViewMode === '2d') {
+      render();
+    }
+  });
 }
 
 // --- Infinite Grid Pan & Zoom Events ---
@@ -1535,9 +1633,9 @@ function initPanAndZoomEvents() {
   // Mouse Wheel Zoom centered on cursor
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const sx = e.clientX - rect.left;
-    const sy = e.clientY - rect.top;
+    cachedCanvasRect = canvas.getBoundingClientRect();
+    const sx = e.clientX - cachedCanvasRect.left;
+    const sy = e.clientY - cachedCanvasRect.top;
 
     const mathX = toMathX(sx);
     const mathY = toMathY(sy);
@@ -1551,15 +1649,15 @@ function initPanAndZoomEvents() {
     gridState.originY = sy + mathY * newScale;
     gridState.scale = newScale;
 
-    render();
+    scheduleInteractionFrame(true, false, false);
   }, { passive: false });
 
   // Mouse Down
   canvas.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return; // Only left click
-    const rect = canvas.getBoundingClientRect();
-    const sx = e.clientX - rect.left;
-    const sy = e.clientY - rect.top;
+    cachedCanvasRect = canvas.getBoundingClientRect();
+    const sx = e.clientX - cachedCanvasRect.left;
+    const sy = e.clientY - cachedCanvasRect.top;
     const mx = toMathX(sx);
     const my = toMathY(sy);
 
@@ -1586,7 +1684,7 @@ function initPanAndZoomEvents() {
         if (getShapeType(activeShape) === 'triangle') {
           gridState.resizeInitialTriangleVerts = getTriangleVertices(activeShape);
         }
-        canvas.style.cursor = hitHandle.cursor;
+        setCanvasCursor(hitHandle.cursor);
         return;
       }
     }
@@ -1610,7 +1708,6 @@ function initPanAndZoomEvents() {
         canvas.classList.add('dragging-shape');
       }
       render();
-      renderAllPanels();
     } else {
       // Background pan
       gridState.isPanning = true;
@@ -1624,8 +1721,8 @@ function initPanAndZoomEvents() {
 
   // Mouse Move
   window.addEventListener('mousemove', (e) => {
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
+    if (!canvas || currentViewMode !== '2d') return;
+    const rect = getCanvasRect();
     const sx = e.clientX - rect.left;
     const sy = e.clientY - rect.top;
     const mx = toMathX(sx);
@@ -1635,53 +1732,53 @@ function initPanAndZoomEvents() {
     updateCoordsReadout(mx, my);
 
     if (gridState.isResizingShape && gridState.draggedShape) {
-      applyShapeResize(gridState.draggedShape, sx, sy);
+      applyShapeResize(gridState.draggedShape, sx, sy, true);
+      scheduleInteractionFrame(true, true, true);
     } else if (gridState.isRotatingShape && gridState.draggedShape) {
       const shape = gridState.draggedShape;
       const centerSx = toScreenX(shape.x);
       const centerSy = toScreenY(shape.y);
       const angle = Math.atan2(sx - centerSx, -(sy - centerSy));
       shape.rotation = angle;
-      canvas.style.cursor = 'crosshair';
-      render();
-      renderPropertiesPanel();
+      setCanvasCursor('crosshair');
+      scheduleInteractionFrame(true, false, true);
     } else if (gridState.isDraggingShape && gridState.draggedShape) {
       gridState.draggedShape.x = mx - gridState.shapeDragOffsetMathX;
       gridState.draggedShape.y = my - gridState.shapeDragOffsetMathY;
-      canvas.style.cursor = 'move';
-      render();
-      updateDimensionsPanelValues();
+      setCanvasCursor('move');
+      scheduleInteractionFrame(true, true, false);
     } else if (gridState.isPanning) {
       const dx = sx - gridState.panStartX;
       const dy = sy - gridState.panStartY;
       gridState.originX = gridState.initialOriginX + dx;
       gridState.originY = gridState.initialOriginY + dy;
-      render();
+      scheduleInteractionFrame(true, false, false);
     } else {
       // Hover feedback
       const activeShape = activeShapeId ? SHAPES[activeShapeId] : null;
       if (activeShape && activeShape.visible && !activeShape.is3DOnly) {
         if (isRotationHandleClicked(activeShape, sx, sy)) {
-          canvas.style.cursor = 'crosshair';
+          setCanvasCursor('crosshair');
           return;
         }
         const hitHandle = getResizeHandleAtScreenCoords(activeShape, sx, sy);
         if (hitHandle) {
-          canvas.style.cursor = hitHandle.cursor;
+          setCanvasCursor(hitHandle.cursor);
           return;
         }
       }
       const hitShape = getShapeAtMathCoords(mx, my);
       if (hitShape) {
-        canvas.style.cursor = e.shiftKey ? 'crosshair' : 'move';
+        setCanvasCursor(e.shiftKey ? 'crosshair' : 'move');
       } else {
-        canvas.style.cursor = 'grab';
+        setCanvasCursor('grab');
       }
     }
-  });
+  }, { passive: true });
 
   // Mouse Up
   window.addEventListener('mouseup', () => {
+    flushInteractionFrame();
     if (gridState.isResizingShape) {
       gridState.isResizingShape = false;
       gridState.draggedShape = null;
@@ -1707,11 +1804,13 @@ function initPanAndZoomEvents() {
         if (activeShapeId !== null) {
           setActiveShape(null);
           render();
-          renderAllPanels();
         }
       }
       gridState.isPanning = false;
-      if (canvas) canvas.classList.remove('panning');
+      if (canvas) {
+        canvas.classList.remove('panning');
+        render();
+      }
     }
   });
 
@@ -1720,11 +1819,11 @@ function initPanAndZoomEvents() {
   let touchStartScale = 40;
 
   canvas.addEventListener('touchstart', (e) => {
+    cachedCanvasRect = canvas.getBoundingClientRect();
     if (e.touches.length === 1) {
       const touch = e.touches[0];
-      const rect = canvas.getBoundingClientRect();
-      const sx = touch.clientX - rect.left;
-      const sy = touch.clientY - rect.top;
+      const sx = touch.clientX - cachedCanvasRect.left;
+      const sy = touch.clientY - cachedCanvasRect.top;
       const mx = toMathX(sx);
       const my = toMathY(sy);
 
@@ -1757,7 +1856,6 @@ function initPanAndZoomEvents() {
         bringShapeToFront(hitShape.id);
         setActiveShape(hitShape.id);
         render();
-        renderAllPanels();
       } else {
         gridState.isPanning = true;
         gridState.panStartX = sx;
@@ -1776,33 +1874,32 @@ function initPanAndZoomEvents() {
   }, { passive: false });
 
   window.addEventListener('touchmove', (e) => {
-    if (!canvas) return;
+    if (!canvas || currentViewMode !== '2d') return;
+    const rect = getCanvasRect();
     if (e.touches.length === 1) {
       const touch = e.touches[0];
-      const rect = canvas.getBoundingClientRect();
       const sx = touch.clientX - rect.left;
       const sy = touch.clientY - rect.top;
       const mx = toMathX(sx);
       const my = toMathY(sy);
 
       if (gridState.isResizingShape && gridState.draggedShape) {
-        applyShapeResize(gridState.draggedShape, sx, sy);
+        applyShapeResize(gridState.draggedShape, sx, sy, true);
+        scheduleInteractionFrame(true, true, true);
       } else if (gridState.isRotatingShape && gridState.draggedShape) {
         const shape = gridState.draggedShape;
         const centerSx = toScreenX(shape.x);
         const centerSy = toScreenY(shape.y);
         shape.rotation = Math.atan2(sx - centerSx, -(sy - centerSy));
-        render();
-        renderPropertiesPanel();
+        scheduleInteractionFrame(true, false, true);
       } else if (gridState.isDraggingShape && gridState.draggedShape) {
         gridState.draggedShape.x = mx - gridState.shapeDragOffsetMathX;
         gridState.draggedShape.y = my - gridState.shapeDragOffsetMathY;
-        render();
-        updateDimensionsPanelValues();
+        scheduleInteractionFrame(true, true, false);
       } else if (gridState.isPanning) {
         gridState.originX = gridState.initialOriginX + (sx - gridState.panStartX);
         gridState.originY = gridState.initialOriginY + (sy - gridState.panStartY);
-        render();
+        scheduleInteractionFrame(true, false, false);
       }
     } else if (e.touches.length === 2) {
       const t1 = e.touches[0];
@@ -1810,7 +1907,6 @@ function initPanAndZoomEvents() {
       const currentDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
       if (touchStartDist > 0) {
         const factor = currentDist / touchStartDist;
-        const rect = canvas.getBoundingClientRect();
         const midX = (t1.clientX + t2.clientX) / 2 - rect.left;
         const midY = (t1.clientY + t2.clientY) / 2 - rect.top;
         const mx = toMathX(midX);
@@ -1820,12 +1916,13 @@ function initPanAndZoomEvents() {
         gridState.originX = midX - mx * newScale;
         gridState.originY = midY + my * newScale;
         gridState.scale = newScale;
-        render();
+        scheduleInteractionFrame(true, false, false);
       }
     }
   }, { passive: false });
 
   window.addEventListener('touchend', () => {
+    flushInteractionFrame();
     gridState.isResizingShape = false;
     gridState.isDraggingShape = false;
     gridState.isRotatingShape = false;
@@ -1838,11 +1935,17 @@ function initPanAndZoomEvents() {
 }
 
 function updateCoordsReadout(mx, my) {
-  const readout = document.getElementById('gridCoordsReadout');
-  if (readout) {
+  if (!cachedCoordsReadoutEl) {
+    cachedCoordsReadoutEl = document.getElementById('gridCoordsReadout');
+  }
+  if (cachedCoordsReadoutEl) {
     const signX = mx >= 0 ? '+' : '';
     const signY = my >= 0 ? '+' : '';
-    readout.textContent = `(${signX}${mx.toFixed(2)}, ${signY}${my.toFixed(2)})`;
+    const nextText = `(${signX}${mx.toFixed(2)}, ${signY}${my.toFixed(2)})`;
+    if (nextText !== lastCoordsReadoutText) {
+      lastCoordsReadoutText = nextText;
+      cachedCoordsReadoutEl.textContent = nextText;
+    }
   }
 }
 
@@ -1917,6 +2020,85 @@ function removeShapeInstance(shapeId) {
   }
 }
 
+const shapeItemDomCache = new Map();
+
+function createShapeSelectorItemElements(id) {
+  const item = document.createElement('div');
+  item.className = 'floating-shape-item';
+  item.id = `shapeItem_${id}`;
+  item.setAttribute('data-id', id);
+
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.className = 'shape-checkbox-input';
+  checkbox.id = `check_${id}`;
+
+  checkbox.addEventListener('change', (e) => {
+    e.stopPropagation();
+    const shape = SHAPES[id];
+    if (!shape) return;
+    shape.visible = checkbox.checked;
+    if (shape.visible) {
+      bringShapeToFront(id);
+      setActiveShape(id);
+    } else {
+      if (activeShapeId === id) {
+        setActiveShape(null);
+      } else {
+        renderAllPanels();
+      }
+    }
+    updateShapeCountBadge();
+    if (currentViewMode === '3d') {
+      rebuildThreeShapes();
+    } else {
+      render();
+    }
+  });
+
+  const dot = document.createElement('span');
+  dot.className = 'shape-color-indicator';
+
+  const label = document.createElement('span');
+  label.className = 'shape-item-label';
+
+  const delBtn = document.createElement('button');
+  delBtn.type = 'button';
+  delBtn.className = 'shape-delete-btn';
+  delBtn.innerHTML = '&times;';
+
+  delBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    removeShapeInstance(id);
+  });
+
+  item.addEventListener('click', (e) => {
+    if (e.target !== checkbox && e.target !== delBtn) {
+      const shape = SHAPES[id];
+      if (!shape) return;
+      if (!shape.visible) {
+        shape.visible = true;
+        checkbox.checked = true;
+        updateShapeCountBadge();
+      }
+      bringShapeToFront(id);
+      setActiveShape(id);
+      if (currentViewMode === '3d') {
+        rebuildThreeShapes();
+      } else {
+        render();
+      }
+    }
+  });
+
+  item.appendChild(checkbox);
+  item.appendChild(dot);
+  item.appendChild(label);
+  item.appendChild(delBtn);
+
+  return { item, checkbox, dot, label, delBtn };
+}
+
 function updateShapeSelectorUI() {
   const listEl = document.getElementById('shapeSelectorList');
   if (!listEl) return;
@@ -1927,108 +2109,114 @@ function updateShapeSelectorUI() {
     return true;
   });
   if (countBadge) {
-    countBadge.textContent = `${visibleShapes.length} ${visibleShapes.length === 1 ? 'shape' : 'shapes'}`;
+    const nextCountText = `${visibleShapes.length} ${visibleShapes.length === 1 ? 'shape' : 'shapes'}`;
+    if (countBadge.textContent !== nextCountText) {
+      countBadge.textContent = nextCountText;
+    }
   }
   updateShapeCountBadge();
 
-  const shapeIds = renderOrder.filter(id => !!SHAPES[id]);
+  // Prune removed shapes from cache
+  for (const cachedId of shapeItemDomCache.keys()) {
+    if (!SHAPES[cachedId]) {
+      shapeItemDomCache.delete(cachedId);
+    }
+  }
 
-  if (shapeIds.length === 0) {
-    listEl.innerHTML = '<div class="no-shapes-msg">No shapes on graph.<br>Click a shape in the library above to add.</div>';
+  const displayIds = [];
+  for (let i = renderOrder.length - 1; i >= 0; i--) {
+    const id = renderOrder[i];
+    const shape = SHAPES[id];
+    if (!shape) continue;
+    if (currentViewMode === '2d' && shape.is3DOnly) continue;
+    displayIds.push(id);
+  }
+
+  if (displayIds.length === 0) {
+    if (!listEl.querySelector('.no-shapes-msg')) {
+      listEl.innerHTML = '<div class="no-shapes-msg">No shapes on graph.<br>Click a shape in the library above to add.</div>';
+    }
     return;
   }
 
-  listEl.innerHTML = '';
+  let needsOrderSync = listEl.children.length !== displayIds.length;
 
-  shapeIds.slice().reverse().forEach(id => {
+  for (let i = 0; i < displayIds.length; i++) {
+    const id = displayIds[i];
     const shape = SHAPES[id];
-    if (currentViewMode === '2d' && shape.is3DOnly) return;
+    let entry = shapeItemDomCache.get(id);
+    if (!entry) {
+      entry = createShapeSelectorItemElements(id);
+      shapeItemDomCache.set(id, entry);
+      needsOrderSync = true;
+    }
 
-    const item = document.createElement('div');
-    item.className = `floating-shape-item ${id === activeShapeId ? 'active-selected' : ''}`;
-    item.id = `shapeItem_${id}`;
-    item.setAttribute('data-id', id);
+    const { item, checkbox, dot, label, delBtn } = entry;
+    item.classList.toggle('active-selected', id === activeShapeId);
+    if (checkbox.checked !== !!shape.visible) {
+      checkbox.checked = !!shape.visible;
+    }
+    const toggleAria = `Toggle ${shape.name}`;
+    if (checkbox.getAttribute('aria-label') !== toggleAria) {
+      checkbox.setAttribute('aria-label', toggleAria);
+    }
+    if (dot.dataset.color !== shape.color) {
+      dot.dataset.color = shape.color;
+      dot.style.backgroundColor = shape.color;
+    }
+    if (label.textContent !== shape.name) {
+      label.textContent = shape.name;
+    }
+    const delTitle = `Delete ${shape.name}`;
+    if (delBtn.title !== delTitle) {
+      delBtn.title = delTitle;
+      delBtn.setAttribute('aria-label', delTitle);
+    }
 
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'shape-checkbox-input';
-    checkbox.id = `check_${id}`;
-    checkbox.checked = !!shape.visible;
-    checkbox.setAttribute('aria-label', `Toggle ${shape.name}`);
+    if (!needsOrderSync && listEl.children[i] !== item) {
+      needsOrderSync = true;
+    }
+  }
 
-    checkbox.addEventListener('change', (e) => {
-      e.stopPropagation();
-      shape.visible = checkbox.checked;
-      if (shape.visible) {
-        bringShapeToFront(id);
-        setActiveShape(id);
-      } else {
-        if (activeShapeId === id) {
-          setActiveShape(null);
-        }
-      }
-      if (currentViewMode === '3d') {
-        rebuildThreeShapes();
-      } else {
-        render();
-      }
-      renderAllPanels();
-    });
-
-    const dot = document.createElement('span');
-    dot.className = 'shape-color-indicator';
-    dot.style.backgroundColor = shape.color;
-
-    const label = document.createElement('span');
-    label.className = 'shape-item-label';
-    label.textContent = shape.name;
-
-    const delBtn = document.createElement('button');
-    delBtn.type = 'button';
-    delBtn.className = 'shape-delete-btn';
-    delBtn.title = `Delete ${shape.name}`;
-    delBtn.setAttribute('aria-label', `Delete ${shape.name}`);
-    delBtn.innerHTML = '&times;';
-
-    delBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      removeShapeInstance(id);
-    });
-
-    item.addEventListener('click', (e) => {
-      if (e.target !== checkbox && e.target !== delBtn) {
-        if (!shape.visible) {
-          shape.visible = true;
-          checkbox.checked = true;
-        }
-        bringShapeToFront(id);
-        setActiveShape(id);
-        if (currentViewMode === '3d') {
-          rebuildThreeShapes();
-        } else {
-          render();
-        }
-        renderAllPanels();
-      }
-    });
-
-    item.appendChild(checkbox);
-    item.appendChild(dot);
-    item.appendChild(label);
-    item.appendChild(delBtn);
-
-    listEl.appendChild(item);
-  });
+  if (needsOrderSync) {
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < displayIds.length; i++) {
+      frag.appendChild(shapeItemDomCache.get(displayIds[i]).item);
+    }
+    listEl.textContent = '';
+    listEl.appendChild(frag);
+  }
 }
 
 function initShapeLibrary() {
   const container = document.getElementById('shapeLibraryGrid');
   const tabs = document.querySelectorAll('.category-tab');
   const searchInput = document.getElementById('shapeSearchInput');
+  const libButtonCache = new Map();
+
+  function getCachedLibButton(item) {
+    let btn = libButtonCache.get(item.type);
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-lib-shape';
+      btn.setAttribute('data-type', item.type);
+      btn.title = `Add new ${item.name} to graph`;
+      btn.innerHTML = `
+        <span class="lib-shape-icon" aria-hidden="true">${item.svg}</span>
+        <span class="lib-shape-name">${item.name}</span>
+      `;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        addShapeInstance(item.type);
+      });
+      libButtonCache.set(item.type, btn);
+    }
+    return btn;
+  }
 
   function renderLibrary() {
     if (!container) return;
-    container.innerHTML = '';
 
     const q = currentLibSearch.trim().toLowerCase();
     const filtered = SHAPE_LIBRARY_ITEMS.filter(item => {
@@ -2042,6 +2230,8 @@ function initShapeLibrary() {
       return;
     }
 
+    const frag = document.createDocumentFragment();
+
     if (currentLibCategory === 'all' && !q) {
       // Group visually into 2D and 3D
       const items2D = filtered.filter(i => i.category === '2d');
@@ -2050,47 +2240,39 @@ function initShapeLibrary() {
       if (items2D.length > 0) {
         const group2D = document.createElement('div');
         group2D.className = 'shape-lib-group';
-        group2D.innerHTML = '<div class="shape-lib-group-title">2D Plane Shapes</div>';
+        const title2D = document.createElement('div');
+        title2D.className = 'shape-lib-group-title';
+        title2D.textContent = '2D Plane Shapes';
+        group2D.appendChild(title2D);
         const grid2D = document.createElement('div');
         grid2D.className = 'shape-lib-group-items';
-        items2D.forEach(item => grid2D.appendChild(createLibButton(item)));
+        items2D.forEach(item => grid2D.appendChild(getCachedLibButton(item)));
         group2D.appendChild(grid2D);
-        container.appendChild(group2D);
+        frag.appendChild(group2D);
       }
 
       if (items3D.length > 0) {
         const group3D = document.createElement('div');
         group3D.className = 'shape-lib-group';
-        group3D.innerHTML = '<div class="shape-lib-group-title">3D Solid Shapes</div>';
+        const title3D = document.createElement('div');
+        title3D.className = 'shape-lib-group-title';
+        title3D.textContent = '3D Solid Shapes';
+        group3D.appendChild(title3D);
         const grid3D = document.createElement('div');
         grid3D.className = 'shape-lib-group-items';
-        items3D.forEach(item => grid3D.appendChild(createLibButton(item)));
+        items3D.forEach(item => grid3D.appendChild(getCachedLibButton(item)));
         group3D.appendChild(grid3D);
-        container.appendChild(group3D);
+        frag.appendChild(group3D);
       }
     } else {
       const grid = document.createElement('div');
       grid.className = 'shape-lib-group-items';
-      filtered.forEach(item => grid.appendChild(createLibButton(item)));
-      container.appendChild(grid);
+      filtered.forEach(item => grid.appendChild(getCachedLibButton(item)));
+      frag.appendChild(grid);
     }
-  }
 
-  function createLibButton(item) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'btn-lib-shape';
-    btn.setAttribute('data-type', item.type);
-    btn.title = `Add new ${item.name} to graph`;
-    btn.innerHTML = `
-      <span class="lib-shape-icon" aria-hidden="true">${item.svg}</span>
-      <span class="lib-shape-name">${item.name}</span>
-    `;
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      addShapeInstance(item.type);
-    });
-    return btn;
+    container.textContent = '';
+    container.appendChild(frag);
   }
 
   tabs.forEach(tab => {
@@ -2358,6 +2540,7 @@ function zoomByCenter(factor) {
       dir.multiplyScalar(factor > 1 ? 0.8 : 1.25);
       threeCamera.position.copy(threeControls.target).add(dir);
       threeControls.update();
+      threeNeedsRender = true;
     }
     return;
   }
@@ -2383,6 +2566,7 @@ function resetGridOrigin() {
       threeCamera.position.set(14, 12, 18);
       threeControls.target.set(0, 2, 0);
       threeControls.update();
+      threeNeedsRender = true;
     }
     return;
   }
@@ -2394,6 +2578,13 @@ function resetGridOrigin() {
   gridState.originY = height / 2;
   gridState.scale = 40;
   render();
+}
+
+// Helper to create BufferGeometry directly from flat coordinate array without allocating THREE.Vector3 instances
+function createLineBufferGeometryFromCoords(coords) {
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.Float32BufferAttribute(coords, 3));
+  return geom;
 }
 
 // --- Three.js 3D WebGL Scene Engine ---
@@ -2460,6 +2651,7 @@ function initThreeScene() {
   updateDynamicThreeGrid(true);
 
   threeControls.addEventListener('change', () => {
+    threeNeedsRender = true;
     updateDynamicThreeGrid();
   });
 
@@ -2475,17 +2667,30 @@ function initThreeScene() {
 
   initThreeInteraction();
 
-  // 10. Start Animation Loop
+  // 10. Start Animation Loop (ensure no duplicate loop exists)
+  if (threeAnimFrameId) {
+    cancelAnimationFrame(threeAnimFrameId);
+    threeAnimFrameId = null;
+  }
+  threeNeedsRender = true;
   threeAnimate();
 }
 
 function threeAnimate() {
-  threeAnimFrameId = requestAnimationFrame(threeAnimate);
-  if (threeControls) threeControls.update();
-  if (currentViewMode === '3d') {
-    updateDynamicThreeGrid();
+  if (currentViewMode !== '3d' || !threeRenderer || !threeScene || !threeCamera) {
+    threeAnimFrameId = null;
+    return;
   }
-  if (threeRenderer && threeScene && threeCamera) {
+  threeAnimFrameId = requestAnimationFrame(threeAnimate);
+  if (document.hidden) return;
+
+  if (threeControls) {
+    threeControls.update();
+  }
+
+  const isInteracting3D = isGizmoTranslating || is3DHeightDragging || is3DDragging || is3DRotating;
+  if (threeNeedsRender || isInteracting3D) {
+    threeNeedsRender = false;
     threeRenderer.render(threeScene, threeCamera);
   }
 }
@@ -2517,6 +2722,7 @@ function getCachedNumberSprite(num, colorHex) {
 
     texture = new THREE.CanvasTexture(canvas);
     texture.minFilter = THREE.LinearFilter;
+    texture.userData = { isCached: true };
     numberSpriteCache.set(key, texture);
   }
   const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
@@ -2561,6 +2767,7 @@ function updateDynamicThreeGrid(force = false) {
   lastMinSceneY = minSceneY;
   if (!lastGridTarget) lastGridTarget = new THREE.Vector3();
   lastGridTarget.copy(target);
+  threeNeedsRender = true;
 
   // 1. Calculate adaptive minor and major intervals using 1-2-5 scale
   const roughStep = Math.max(0.2, camDist / 25);
@@ -2618,30 +2825,31 @@ function updateDynamicThreeGrid(force = false) {
   }
 
   // --- Dynamic Grid Lines on Y=0 plane (Clear Major/Minor Hierarchy) ---
-  const minorPoints = [];
-  const majorPoints = [];
+  const minorCoords = [];
+  const majorCoords = [];
+  const majorRatio = Math.round(majorStep / minorStep);
 
   for (let x = -extent; x <= extent; x += minorStep) {
-    const isMajor = Math.abs(Math.round(x / minorStep) % Math.round(majorStep / minorStep)) === 0;
+    const isMajor = Math.abs(Math.round(x / minorStep) % majorRatio) === 0;
     if (isMajor) {
-      majorPoints.push(new THREE.Vector3(x, 0, -extent), new THREE.Vector3(x, 0, extent));
+      majorCoords.push(x, 0, -extent, x, 0, extent);
     } else {
-      minorPoints.push(new THREE.Vector3(x, 0, -extent), new THREE.Vector3(x, 0, extent));
+      minorCoords.push(x, 0, -extent, x, 0, extent);
     }
   }
 
   for (let z = -extent; z <= extent; z += minorStep) {
-    const isMajor = Math.abs(Math.round(z / minorStep) % Math.round(majorStep / minorStep)) === 0;
+    const isMajor = Math.abs(Math.round(z / minorStep) % majorRatio) === 0;
     if (isMajor) {
-      majorPoints.push(new THREE.Vector3(-extent, 0, z), new THREE.Vector3(extent, 0, z));
+      majorCoords.push(-extent, 0, z, extent, 0, z);
     } else {
-      minorPoints.push(new THREE.Vector3(-extent, 0, z), new THREE.Vector3(extent, 0, z));
+      minorCoords.push(-extent, 0, z, extent, 0, z);
     }
   }
 
   const isDark = currentTheme === 'dark';
-  if (minorPoints.length > 0) {
-    const minorGeom = new THREE.BufferGeometry().setFromPoints(minorPoints);
+  if (minorCoords.length > 0) {
+    const minorGeom = createLineBufferGeometryFromCoords(minorCoords);
     const minorMat = new THREE.LineBasicMaterial({
       color: isDark ? 0x1e293b : 0xcbd5e1,
       transparent: true,
@@ -2650,8 +2858,8 @@ function updateDynamicThreeGrid(force = false) {
     threeDynamicGridGroup.add(new THREE.LineSegments(minorGeom, minorMat));
   }
 
-  if (majorPoints.length > 0) {
-    const majorGeom = new THREE.BufferGeometry().setFromPoints(majorPoints);
+  if (majorCoords.length > 0) {
+    const majorGeom = createLineBufferGeometryFromCoords(majorCoords);
     const majorMat = new THREE.LineBasicMaterial({
       color: isDark ? 0x334155 : 0x64748b,
       transparent: true,
@@ -2760,22 +2968,24 @@ function updateDynamicThreeGrid(force = false) {
   originSprite.position.set(majorTickArm + labelWorldW * 0.45, 0.05, majorTickArm + labelWorldH * 0.85);
   threeAxesGroup.add(originSprite);
 
+  const labelRatio = Math.round(labelStep / minorStep);
+
   // X Axis Ticks & Numbers (-axisLen to +axisLen)
-  const minorTickPointsX = [];
-  const majorTickPointsX = [];
+  const minorTickCoordsX = [];
+  const majorTickCoordsX = [];
   const startX = Math.ceil(-axisLen / minorStep) * minorStep;
   for (let i = startX; i <= axisLen; i += minorStep) {
     if (Math.abs(i) < 0.001) continue;
-    const isMajor = Math.abs(Math.round(i / minorStep) % Math.round(majorStep / minorStep)) === 0;
+    const isMajor = Math.abs(Math.round(i / minorStep) % majorRatio) === 0;
     const arm = isMajor ? majorTickArm : minorTickArm;
     if (isMajor) {
-      majorTickPointsX.push(new THREE.Vector3(i, 0, -arm), new THREE.Vector3(i, 0, arm));
+      majorTickCoordsX.push(i, 0, -arm, i, 0, arm);
     } else {
-      minorTickPointsX.push(new THREE.Vector3(i, 0, -arm), new THREE.Vector3(i, 0, arm));
+      minorTickCoordsX.push(i, 0, -arm, i, 0, arm);
     }
 
     // Number label at labelStep intervals
-    if (Math.abs(Math.round(i / minorStep) % Math.round(labelStep / minorStep)) === 0) {
+    if (Math.abs(Math.round(i / minorStep) % labelRatio) === 0) {
       const val = Math.round(i * 100) / 100;
       const str = val > 0 ? `+${val}` : `${val}`;
       const numSprite = getCachedNumberSprite(str, '#ef4444');
@@ -2785,28 +2995,28 @@ function updateDynamicThreeGrid(force = false) {
     }
   }
 
-  if (minorTickPointsX.length > 0) {
-    threeAxesGroup.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(minorTickPointsX), new THREE.LineBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.55 })));
+  if (minorTickCoordsX.length > 0) {
+    threeAxesGroup.add(new THREE.LineSegments(createLineBufferGeometryFromCoords(minorTickCoordsX), new THREE.LineBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.55 })));
   }
-  if (majorTickPointsX.length > 0) {
-    threeAxesGroup.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(majorTickPointsX), new THREE.LineBasicMaterial({ color: 0xef4444, transparent: true, opacity: 1.0 })));
+  if (majorTickCoordsX.length > 0) {
+    threeAxesGroup.add(new THREE.LineSegments(createLineBufferGeometryFromCoords(majorTickCoordsX), new THREE.LineBasicMaterial({ color: 0xef4444, transparent: true, opacity: 1.0 })));
   }
 
   // Y Axis Ticks & Numbers (yAxisBottom to yAxisTop, negative to positive)
-  const minorTickPointsY = [];
-  const majorTickPointsY = [];
+  const minorTickCoordsY = [];
+  const majorTickCoordsY = [];
   const startY = Math.ceil(yAxisBottom / minorStep) * minorStep;
   for (let j = startY; j <= yAxisTop; j += minorStep) {
     if (Math.abs(j) < 0.001) continue;
-    const isMajor = Math.abs(Math.round(j / minorStep) % Math.round(majorStep / minorStep)) === 0;
+    const isMajor = Math.abs(Math.round(j / minorStep) % majorRatio) === 0;
     const arm = isMajor ? majorTickArm : minorTickArm;
     if (isMajor) {
-      majorTickPointsY.push(new THREE.Vector3(-arm, j, 0), new THREE.Vector3(arm, j, 0));
+      majorTickCoordsY.push(-arm, j, 0, arm, j, 0);
     } else {
-      minorTickPointsY.push(new THREE.Vector3(-arm, j, 0), new THREE.Vector3(arm, j, 0));
+      minorTickCoordsY.push(-arm, j, 0, arm, j, 0);
     }
 
-    if (Math.abs(Math.round(j / minorStep) % Math.round(labelStep / minorStep)) === 0) {
+    if (Math.abs(Math.round(j / minorStep) % labelRatio) === 0) {
       const val = Math.round(j * 100) / 100;
       const str = val > 0 ? `+${val}` : `${val}`;
       const numSprite = getCachedNumberSprite(str, '#10b981');
@@ -2816,28 +3026,28 @@ function updateDynamicThreeGrid(force = false) {
     }
   }
 
-  if (minorTickPointsY.length > 0) {
-    threeAxesGroup.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(minorTickPointsY), new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.55 })));
+  if (minorTickCoordsY.length > 0) {
+    threeAxesGroup.add(new THREE.LineSegments(createLineBufferGeometryFromCoords(minorTickCoordsY), new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.55 })));
   }
-  if (majorTickPointsY.length > 0) {
-    threeAxesGroup.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(majorTickPointsY), new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 1.0 })));
+  if (majorTickCoordsY.length > 0) {
+    threeAxesGroup.add(new THREE.LineSegments(createLineBufferGeometryFromCoords(majorTickCoordsY), new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 1.0 })));
   }
 
   // Z Axis Ticks & Numbers (-axisLen to +axisLen, negative to positive)
-  const minorTickPointsZ = [];
-  const majorTickPointsZ = [];
+  const minorTickCoordsZ = [];
+  const majorTickCoordsZ = [];
   const startZ = Math.ceil(-axisLen / minorStep) * minorStep;
   for (let k = startZ; k <= axisLen; k += minorStep) {
     if (Math.abs(k) < 0.001) continue;
-    const isMajor = Math.abs(Math.round(k / minorStep) % Math.round(majorStep / minorStep)) === 0;
+    const isMajor = Math.abs(Math.round(k / minorStep) % majorRatio) === 0;
     const arm = isMajor ? majorTickArm : minorTickArm;
     if (isMajor) {
-      majorTickPointsZ.push(new THREE.Vector3(-arm, 0, k), new THREE.Vector3(arm, 0, k));
+      majorTickCoordsZ.push(-arm, 0, k, arm, 0, k);
     } else {
-      minorTickPointsZ.push(new THREE.Vector3(-arm, 0, k), new THREE.Vector3(arm, 0, k));
+      minorTickCoordsZ.push(-arm, 0, k, arm, 0, k);
     }
 
-    if (Math.abs(Math.round(k / minorStep) % Math.round(labelStep / minorStep)) === 0) {
+    if (Math.abs(Math.round(k / minorStep) % labelRatio) === 0) {
       const val = Math.round(k * 100) / 100;
       const str = val > 0 ? `+${val}` : `${val}`;
       const numSprite = getCachedNumberSprite(str, '#2563eb');
@@ -2847,76 +3057,73 @@ function updateDynamicThreeGrid(force = false) {
     }
   }
 
-  if (minorTickPointsZ.length > 0) {
-    threeAxesGroup.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(minorTickPointsZ), new THREE.LineBasicMaterial({ color: 0x2563eb, transparent: true, opacity: 0.55 })));
+  if (minorTickCoordsZ.length > 0) {
+    threeAxesGroup.add(new THREE.LineSegments(createLineBufferGeometryFromCoords(minorTickCoordsZ), new THREE.LineBasicMaterial({ color: 0x2563eb, transparent: true, opacity: 0.55 })));
   }
-  if (majorTickPointsZ.length > 0) {
-    threeAxesGroup.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(majorTickPointsZ), new THREE.LineBasicMaterial({ color: 0x2563eb, transparent: true, opacity: 1.0 })));
+  if (majorTickCoordsZ.length > 0) {
+    threeAxesGroup.add(new THREE.LineSegments(createLineBufferGeometryFromCoords(majorTickCoordsZ), new THREE.LineBasicMaterial({ color: 0x2563eb, transparent: true, opacity: 1.0 })));
   }
 }
 
+// Reusable THREE.Vector3 temporaries for 3D camera-relative ground movement
+const _camRight = new THREE.Vector3();
+const _camUp = new THREE.Vector3();
+const _camDir = new THREE.Vector3();
+const _rightXZ = new THREE.Vector3();
+const _upXZ = new THREE.Vector3();
+const _moveVec = new THREE.Vector3();
+const _defaultRefPt = new THREE.Vector3(0, 0, 0);
+const _tempRefPos = new THREE.Vector3();
+
 function getCameraRelativeGroundDelta(dxScreen, dyScreen, refPoint) {
-  if (!threeCamera) return new THREE.Vector3(0, 0, 0);
+  if (!threeCamera) return _moveVec.set(0, 0, 0);
 
   // Extract camera basis in world space
-  const camRight = new THREE.Vector3();
-  const camUp = new THREE.Vector3();
-  const camDir = new THREE.Vector3();
-  threeCamera.matrixWorld.extractBasis(camRight, camUp, camDir);
+  threeCamera.matrixWorld.extractBasis(_camRight, _camUp, _camDir);
 
   // Project camera screen-right and screen-up onto the ground plane (X-Z)
-  const rightXZ = new THREE.Vector3(camRight.x, 0, camRight.z);
-  const upXZ = new THREE.Vector3(camUp.x, 0, camUp.z);
+  _rightXZ.set(_camRight.x, 0, _camRight.z);
+  _upXZ.set(_camUp.x, 0, _camUp.z);
 
-  if (rightXZ.lengthSq() > 1e-6) rightXZ.normalize();
-  if (upXZ.lengthSq() > 1e-6) upXZ.normalize();
+  if (_rightXZ.lengthSq() > 1e-6) _rightXZ.normalize();
+  if (_upXZ.lengthSq() > 1e-6) _upXZ.normalize();
 
   // Distance from camera to shape determines sensitivity
-  const dist = threeCamera.position.distanceTo(refPoint || new THREE.Vector3(0, 0, 0));
+  const dist = threeCamera.position.distanceTo(refPoint || _defaultRefPt);
   const factor = Math.max(0.005, dist * 0.0022);
 
   // dxScreen is right (+), dyScreen is down (+), so -dyScreen is screen UP
-  const moveVec = new THREE.Vector3();
-  moveVec.addScaledVector(rightXZ, dxScreen * factor);
-  moveVec.addScaledVector(upXZ, -dyScreen * factor);
+  _moveVec.set(0, 0, 0);
+  _moveVec.addScaledVector(_rightXZ, dxScreen * factor);
+  _moveVec.addScaledVector(_upXZ, -dyScreen * factor);
 
-  return moveVec;
+  return _moveVec;
 }
 
 function createAxisNumberSprite(num, colorHex) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 128;
-  const ctx = canvas.getContext('2d');
-
-  ctx.fillStyle = colorHex || '#64748b';
-  ctx.font = 'bold 50px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(String(num), 64, 64);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.minFilter = THREE.LinearFilter;
-  const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
-  const sprite = new THREE.Sprite(spriteMat);
-  sprite.scale.set(0.65, 0.65, 1);
-  return sprite;
+  return getCachedNumberSprite(num, colorHex);
 }
 
 function createAxisLabelSprite(label, colorHex) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 128;
-  const ctx = canvas.getContext('2d');
+  const key = `${label}_${colorHex}`;
+  let texture = axisLabelTextureCache.get(key);
+  if (!texture) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = colorHex;
-  ctx.font = 'bold italic 72px "Times New Roman", Times, Georgia, serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(label, 64, 64);
+    ctx.fillStyle = colorHex;
+    ctx.font = 'bold italic 72px "Times New Roman", Times, Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, 64, 64);
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.minFilter = THREE.LinearFilter;
+    texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.userData = { isCached: true };
+    axisLabelTextureCache.set(key, texture);
+  }
   const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
   const sprite = new THREE.Sprite(spriteMat);
   sprite.scale.set(1.5, 1.5, 1);
@@ -2925,41 +3132,54 @@ function createAxisLabelSprite(label, colorHex) {
 
 function createShapeLabelSprite(text, isHighlighted) {
   const isDark = currentTheme === 'dark';
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 72;
-  const ctx = canvas.getContext('2d');
+  const key = `${text}_${isHighlighted ? 1 : 0}_${currentTheme}`;
+  let texture = shapeLabelTextureCache.get(key);
+  if (!texture) {
+    if (shapeLabelTextureCache.size >= 64) {
+      const oldestKey = shapeLabelTextureCache.keys().next().value;
+      const oldestTex = shapeLabelTextureCache.get(oldestKey);
+      if (oldestTex) oldestTex.dispose();
+      shapeLabelTextureCache.delete(oldestKey);
+    }
 
-  // Background rounded pill
-  if (isHighlighted) {
-    ctx.fillStyle = isDark ? '#3BB8DB' : '#0284c7';
-  } else {
-    ctx.fillStyle = isDark ? 'rgba(2, 6, 24, 0.92)' : 'rgba(255, 255, 255, 0.95)';
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 72;
+    const ctx = canvas.getContext('2d');
+
+    // Background rounded pill
+    if (isHighlighted) {
+      ctx.fillStyle = isDark ? '#3BB8DB' : '#0284c7';
+    } else {
+      ctx.fillStyle = isDark ? 'rgba(2, 6, 24, 0.92)' : 'rgba(255, 255, 255, 0.95)';
+    }
+
+    const r = 16;
+    const x = 6, y = 6, w = 244, h = 60;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = isHighlighted ? (isDark ? '#3BB8DB' : '#ffffff') : (isDark ? 'rgba(59, 184, 219, 0.4)' : 'rgba(203, 213, 225, 0.9)');
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    ctx.fillStyle = isHighlighted ? (isDark ? '#020618' : '#ffffff') : (isDark ? '#ffffff' : '#0f172a');
+    ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 128, 36);
+
+    texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.userData = { isCached: true };
+    shapeLabelTextureCache.set(key, texture);
   }
-
-  const r = 16;
-  const x = 6, y = 6, w = 244, h = 60;
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = isHighlighted ? (isDark ? '#3BB8DB' : '#ffffff') : (isDark ? 'rgba(59, 184, 219, 0.4)' : 'rgba(203, 213, 225, 0.9)');
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-
-  ctx.fillStyle = isHighlighted ? (isDark ? '#020618' : '#ffffff') : (isDark ? '#ffffff' : '#0f172a');
-  ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, 128, 36);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.minFilter = THREE.LinearFilter;
   const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
   const sprite = new THREE.Sprite(spriteMat);
   sprite.scale.set(3.4, 0.95, 1);
@@ -3043,34 +3263,40 @@ function createEllipticalConeGeometry(rx, ry, height, segments = 64) {
 }
 
 function createGizmoPillSprite(text, colorHex) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 110;
-  canvas.height = 48;
-  const ctx = canvas.getContext('2d');
+  const key = `${text}_${colorHex || '#3b82f6'}`;
+  let texture = gizmoPillTextureCache.get(key);
+  if (!texture) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 110;
+    canvas.height = 48;
+    const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = colorHex || '#3b82f6';
-  const r = 10;
-  ctx.beginPath();
-  ctx.moveTo(r, 4);
-  ctx.arcTo(106, 4, 106, 44, r);
-  ctx.arcTo(106, 44, 4, 44, r);
-  ctx.arcTo(4, 44, 4, 4, r);
-  ctx.arcTo(4, 4, 106, 4, r);
-  ctx.closePath();
-  ctx.fill();
+    ctx.fillStyle = colorHex || '#3b82f6';
+    const r = 10;
+    ctx.beginPath();
+    ctx.moveTo(r, 4);
+    ctx.arcTo(106, 4, 106, 44, r);
+    ctx.arcTo(106, 44, 4, 44, r);
+    ctx.arcTo(4, 44, 4, 4, r);
+    ctx.arcTo(4, 4, 106, 4, r);
+    ctx.closePath();
+    ctx.fill();
 
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
 
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, 55, 24);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 55, 24);
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.minFilter = THREE.LinearFilter;
+    texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.userData = { isCached: true };
+    gizmoPillTextureCache.set(key, texture);
+  }
   const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
   const sprite = new THREE.Sprite(spriteMat);
   sprite.scale.set(0.85, 0.42, 1);
@@ -3367,8 +3593,8 @@ function buildTranslationGizmo(shape) {
     const shaftGeom = new THREE.CylinderGeometry(shaftRadius, shaftRadius, shaftLen, 12);
     const coneGeom = new THREE.ConeGeometry(coneRadius, coneHeight, 16);
 
-    const shaft = new THREE.Mesh(shaftGeom, mat.clone());
-    const cone = new THREE.Mesh(coneGeom, mat.clone());
+    const shaft = new THREE.Mesh(shaftGeom, mat);
+    const cone = new THREE.Mesh(coneGeom, mat);
     shaft.userData = { isMoveGizmo: true, axis, dir, shapeId: shape.id };
     cone.userData = { isMoveGizmo: true, axis, dir, shapeId: shape.id };
 
@@ -3434,12 +3660,34 @@ function buildTranslationGizmo(shape) {
   return gizmoRoot;
 }
 
+let pending3DPanelFrame = 0;
+function schedule3DPanelUpdate() {
+  if (pending3DPanelFrame) return;
+  pending3DPanelFrame = requestAnimationFrame(() => {
+    pending3DPanelFrame = 0;
+    updateDimensionsPanelValues();
+    renderPropertiesPanel();
+  });
+}
+
 function initThreeInteraction() {
   if (!threeRenderer) return;
 
+  if (threePointerMoveHandler) {
+    window.removeEventListener('pointermove', threePointerMoveHandler);
+    threePointerMoveHandler = null;
+  }
+  if (threePointerUpHandler) {
+    window.removeEventListener('pointerup', threePointerUpHandler);
+    threePointerUpHandler = null;
+  }
+
+  let cached3DRect = null;
+
   threeRenderer.domElement.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || !threeCamera || !threeShapeGroup) return;
-    const rect = threeRenderer.domElement.getBoundingClientRect();
+    cached3DRect = threeRenderer.domElement.getBoundingClientRect();
+    const rect = cached3DRect;
     threeMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     threeMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     threePointerDownPos.x = e.clientX;
@@ -3504,6 +3752,7 @@ function initThreeInteraction() {
             z: shape.z !== undefined ? shape.z : 0
           };
           gizmoPointerStart = { x: e.clientX, y: e.clientY };
+          threeNeedsRender = true;
           return;
         } else if (isHeightHandle) {
           is3DHeightDragging = true;
@@ -3548,23 +3797,23 @@ function initThreeInteraction() {
     if (threeControls) threeControls.enabled = true;
   });
 
-  window.addEventListener('pointermove', (e) => {
+  threePointerMoveHandler = (e) => {
     if (currentViewMode !== '3d' || !threeRenderer || !threeCamera || !threeShapeGroup) return;
 
-    const rect = threeRenderer.domElement.getBoundingClientRect();
+    const rect = cached3DRect || threeRenderer.domElement.getBoundingClientRect();
     threeMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     threeMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
     if (isGizmoTranslating && gizmoDraggedShape) {
       const dx = e.clientX - gizmoPointerStart.x;
       const dy = e.clientY - gizmoPointerStart.y;
-      const refPos = new THREE.Vector3(gizmoDragStartPos.x, gizmoDragStartPos.y, gizmoDragStartPos.z);
-      const moveVec = getCameraRelativeGroundDelta(dx, dy, refPos);
+      _tempRefPos.set(gizmoDragStartPos.x, gizmoDragStartPos.y, gizmoDragStartPos.z);
+      const moveVec = getCameraRelativeGroundDelta(dx, dy, _tempRefPos);
 
       if (gizmoDragAxis === 'x') {
         gizmoDraggedShape.x = Math.round((gizmoDragStartPos.x + moveVec.x) * 10) / 10;
       } else if (gizmoDragAxis === 'y') {
-        const dist = threeCamera.position.distanceTo(refPos);
+        const dist = threeCamera.position.distanceTo(_tempRefPos);
         const factor = Math.max(0.005, dist * 0.0022);
         gizmoDraggedShape.y3D = Math.round((gizmoDragStartPos.y - dy * factor) * 10) / 10;
         updateDynamicThreeGrid(true);
@@ -3582,26 +3831,27 @@ function initThreeInteraction() {
       const gizmo = threeShapeGroup.children.find(m => m.userData && m.userData.isGizmoRoot && m.userData.shapeId === gizmoDraggedShape.id);
       if (gizmo) gizmo.position.set(curX, curY, curZ);
 
-      updateDimensionsPanelValues();
-      renderPropertiesPanel();
+      threeNeedsRender = true;
+      schedule3DPanelUpdate();
       return;
     } else if (is3DHeightDragging && dragged3DShape) {
       const dy = threeHeightDragStartY - e.clientY;
       const newH = Math.max(0.1, Math.round((threeHeightDragStartH + dy * 0.04) * 10) / 10);
-      if (dragged3DShape.height !== undefined) {
-        dragged3DShape.height = newH;
+      if (dragged3DShape.height3D !== newH) {
+        if (dragged3DShape.height !== undefined) {
+          dragged3DShape.height = newH;
+        }
+        dragged3DShape.height3D = newH;
+        dragged3DShape.depth = newH;
+        rebuildThreeShapes();
+        updateDynamicThreeGrid(true);
+        schedule3DPanelUpdate();
       }
-      dragged3DShape.height3D = newH;
-      dragged3DShape.depth = newH;
-      rebuildThreeShapes();
-      updateDynamicThreeGrid(true);
-      renderPropertiesPanel();
-      updateDimensionsPanelValues();
     } else if (is3DDragging && dragged3DShape) {
       const dx = e.clientX - threePointerDownPos.x;
       const dy = e.clientY - threePointerDownPos.y;
-      const refPos = new THREE.Vector3(threeDragStartPos.x, threeDragStartPos.y, threeDragStartPos.z);
-      const moveVec = getCameraRelativeGroundDelta(dx, dy, refPos);
+      _tempRefPos.set(threeDragStartPos.x, threeDragStartPos.y, threeDragStartPos.z);
+      const moveVec = getCameraRelativeGroundDelta(dx, dy, _tempRefPos);
 
       dragged3DShape.x = Math.round((threeDragStartPos.x + moveVec.x) * 10) / 10;
       dragged3DShape.z = Math.round((threeDragStartPos.z + moveVec.z) * 10) / 10;
@@ -3612,8 +3862,8 @@ function initThreeInteraction() {
       if (mesh) mesh.position.set(curX, curY, curZ);
       const gizmo = threeShapeGroup.children.find(m => m.userData && m.userData.isGizmoRoot && m.userData.shapeId === dragged3DShape.id);
       if (gizmo) gizmo.position.set(curX, curY, curZ);
-      updateDimensionsPanelValues();
-      renderPropertiesPanel();
+      threeNeedsRender = true;
+      schedule3DPanelUpdate();
     } else if (is3DRotating && dragged3DShape) {
       threeRaycaster.setFromCamera(threeMouse, threeCamera);
       threeDragPlane.constant = -(dragged3DShape.y3D || 0);
@@ -3625,9 +3875,10 @@ function initThreeInteraction() {
         if (mesh) {
           mesh.rotation.y = dragged3DShape.rotation;
         }
-        renderPropertiesPanel();
+        threeNeedsRender = true;
+        schedule3DPanelUpdate();
       }
-    } else if (e.target === threeRenderer.domElement) {
+    } else if (e.target === threeRenderer.domElement && e.buttons === 0) {
       threeRaycaster.setFromCamera(threeMouse, threeCamera);
       const intersects = threeRaycaster.intersectObjects(threeShapeGroup.children, true);
       if (intersects.length > 0) {
@@ -3663,9 +3914,10 @@ function initThreeInteraction() {
         threeRenderer.domElement.style.cursor = 'default';
       }
     }
-  });
+  };
 
-  window.addEventListener('pointerup', (e) => {
+  threePointerUpHandler = (e) => {
+    cached3DRect = null;
     if (currentViewMode !== '3d') return;
 
     if (isGizmoTranslating && gizmoDraggedShape) {
@@ -3711,7 +3963,10 @@ function initThreeInteraction() {
       }
       isPointerDownOn3DBackground = false;
     }
-  });
+  };
+
+  window.addEventListener('pointermove', threePointerMoveHandler, { passive: true });
+  window.addEventListener('pointerup', threePointerUpHandler);
 }
 
 function rebuildThreeShapes() {
@@ -4247,6 +4502,7 @@ function rebuildThreeShapes() {
       threeShapeGroup.add(transGizmo);
     }
   });
+  threeNeedsRender = true;
 }
 
 function disposeThreeObject(obj) {
@@ -4255,11 +4511,13 @@ function disposeThreeObject(obj) {
   if (obj.material) {
     if (Array.isArray(obj.material)) {
       obj.material.forEach(m => {
-        if (m.map) m.map.dispose();
+        if (m.map && (!m.map.userData || !m.map.userData.isCached)) m.map.dispose();
         m.dispose();
       });
     } else {
-      if (obj.material.map) obj.material.map.dispose();
+      if (obj.material.map && (!obj.material.map.userData || !obj.material.map.userData.isCached)) {
+        obj.material.map.dispose();
+      }
       obj.material.dispose();
     }
   }
@@ -4273,6 +4531,18 @@ function disposeThreeScene() {
     cancelAnimationFrame(threeAnimFrameId);
     threeAnimFrameId = null;
   }
+  if (pending3DPanelFrame) {
+    cancelAnimationFrame(pending3DPanelFrame);
+    pending3DPanelFrame = 0;
+  }
+  if (threePointerMoveHandler) {
+    window.removeEventListener('pointermove', threePointerMoveHandler);
+    threePointerMoveHandler = null;
+  }
+  if (threePointerUpHandler) {
+    window.removeEventListener('pointerup', threePointerUpHandler);
+    threePointerUpHandler = null;
+  }
   if (threeControls) {
     threeControls.dispose();
     threeControls = null;
@@ -4284,6 +4554,10 @@ function disposeThreeScene() {
   if (threeAxesGroup) {
     disposeThreeObject(threeAxesGroup);
     threeAxesGroup = null;
+  }
+  if (threeDynamicGridGroup) {
+    disposeThreeObject(threeDynamicGridGroup);
+    threeDynamicGridGroup = null;
   }
   if (threeGridHelper) {
     disposeThreeObject(threeGridHelper);
@@ -4628,13 +4902,10 @@ function render() {
   }
 
   if (!ctx || !canvas) return;
-  const width = canvas.clientWidth;
-  const height = canvas.clientHeight;
+  const width = cachedClientWidth || canvas.clientWidth;
+  const height = cachedClientHeight || canvas.clientHeight;
 
-  // Clear canvas
-  ctx.clearRect(0, 0, width, height);
-
-  // 1. Draw Infinite Grid & Axes (Desmos style)
+  // 1. Draw Infinite Grid & Axes (Desmos style; fills full background)
   drawInfiniteGrid(width, height);
 
   // 2. Draw Shapes in Render Order (skip 3D-only shapes on 2D canvas)
@@ -4739,7 +5010,7 @@ function drawInfiniteGrid(width, height) {
   ctx.lineTo(screenOriginX, height);
   ctx.stroke();
 
-  // --- Axis Tick Labels (Desmos-like dynamic numbers) ---
+  // --- Axis Tick Notches & Labels (Desmos-like dynamic numbers) ---
   // PART 1: Light = black (#111111), Dark = white (#f8fafc)
   ctx.font = '500 11px "Inter", system-ui, sans-serif';
   ctx.fillStyle = theme.label;
@@ -4747,6 +5018,33 @@ function drawInfiniteGrid(width, height) {
   // Determine label position pinning if axes are off screen
   const axisLabelPosY = Math.max(22, Math.min(height - 10, screenOriginY + 16));
   const axisLabelPosX = Math.max(34, Math.min(width - 12, screenOriginX - 8));
+
+  const drawXTicks = screenOriginY >= 0 && screenOriginY <= height;
+  const drawYTicks = screenOriginX >= 0 && screenOriginX <= width;
+  if (drawXTicks || drawYTicks) {
+    ctx.beginPath();
+    ctx.strokeStyle = theme.tick;
+    ctx.lineWidth = 1.5;
+    if (drawXTicks) {
+      for (let x = startMajorX; x <= xMax; x += majorStep) {
+        if (Math.abs(x) < majorStep * 0.05) continue;
+        const sx = toScreenX(x);
+        if (sx < 25 || sx > width - 25) continue;
+        ctx.moveTo(sx, screenOriginY - 4);
+        ctx.lineTo(sx, screenOriginY + 4);
+      }
+    }
+    if (drawYTicks) {
+      for (let y = startMajorY; y <= yMax; y += majorStep) {
+        if (Math.abs(y) < majorStep * 0.05) continue;
+        const sy = toScreenY(y);
+        if (sy < 20 || sy > height - 20) continue;
+        ctx.moveTo(screenOriginX - 4, sy);
+        ctx.lineTo(screenOriginX + 4, sy);
+      }
+    }
+    ctx.stroke();
+  }
 
   // X Axis Labels
   ctx.textAlign = 'center';
@@ -4757,17 +5055,6 @@ function drawInfiniteGrid(width, height) {
     if (Math.abs(x) < majorStep * 0.05) continue;
     const sx = toScreenX(x);
     if (sx < 25 || sx > width - 25) continue;
-
-    // Small tick notch on axis
-    if (screenOriginY >= 0 && screenOriginY <= height) {
-      ctx.beginPath();
-      ctx.moveTo(sx, screenOriginY - 4);
-      ctx.lineTo(sx, screenOriginY + 4);
-      ctx.strokeStyle = theme.tick;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
-
     ctx.fillText(formatGridNumber(x), sx, axisLabelPosY);
   }
 
@@ -4779,17 +5066,6 @@ function drawInfiniteGrid(width, height) {
     if (Math.abs(y) < majorStep * 0.05) continue;
     const sy = toScreenY(y);
     if (sy < 20 || sy > height - 20) continue;
-
-    // Small tick notch on axis
-    if (screenOriginX >= 0 && screenOriginX <= width) {
-      ctx.beginPath();
-      ctx.moveTo(screenOriginX - 4, sy);
-      ctx.lineTo(screenOriginX + 4, sy);
-      ctx.strokeStyle = theme.tick;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
-
     ctx.fillText(formatGridNumber(y), axisLabelPosX, sy);
   }
 
@@ -5231,12 +5507,19 @@ function drawRoundedRect(context, x, y, width, height, radius = 6) {
   context.quadraticCurveTo(x, y, x + r, y);
 }
 
+const badgeTextWidthCache = new Map();
+
 // Draw centered dimension text tag on shape
 function drawDimensionBadge(x, y, text, themeColor) {
   const isDark = currentTheme === 'dark';
   ctx.save();
   ctx.font = '600 11px "Inter", "STIX Two Text", sans-serif';
-  const textWidth = ctx.measureText(text).width;
+  let textWidth = badgeTextWidthCache.get(text);
+  if (textWidth === undefined) {
+    textWidth = ctx.measureText(text).width;
+    if (badgeTextWidthCache.size > 256) badgeTextWidthCache.clear();
+    badgeTextWidthCache.set(text, textWidth);
+  }
   const paddingX = 8;
   const badgeWidth = textWidth + paddingX * 2;
   const badgeHeight = 19;
@@ -7120,14 +7403,38 @@ function renderPropertiesPanel() {
     rows.unshift({ label: 'Position (X, Y, Z):', value: `(${posX}, ${posY}, ${posZ})` });
   }
 
-  body.innerHTML = `
-    ${rows.map(r => `
-      <div class="prop-metric-row">
-        <span class="prop-metric-label">${r.label}</span>
-        <span class="prop-metric-value">${r.value}</span>
-      </div>
-    `).join('')}
-  `;
+  const existingRows = body.children;
+  if (
+    existingRows.length === rows.length &&
+    existingRows.length > 0 &&
+    existingRows[0].classList.contains('prop-metric-row')
+  ) {
+    for (let i = 0; i < rows.length; i++) {
+      const rowEl = existingRows[i];
+      const lblEl = rowEl.firstElementChild;
+      const valEl = rowEl.lastElementChild;
+      if (lblEl && lblEl.textContent !== rows[i].label) lblEl.textContent = rows[i].label;
+      if (valEl && valEl.textContent !== rows[i].value) valEl.textContent = rows[i].value;
+    }
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < rows.length; i++) {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'prop-metric-row';
+    const lblSpan = document.createElement('span');
+    lblSpan.className = 'prop-metric-label';
+    lblSpan.textContent = rows[i].label;
+    const valSpan = document.createElement('span');
+    valSpan.className = 'prop-metric-value';
+    valSpan.textContent = rows[i].value;
+    rowDiv.appendChild(lblSpan);
+    rowDiv.appendChild(valSpan);
+    frag.appendChild(rowDiv);
+  }
+  body.textContent = '';
+  body.appendChild(frag);
 }
 
 function formatMetric(val) {
